@@ -1,0 +1,22 @@
+[
+  {
+    "project": "Tampa",
+    "type": "API",
+    "url": "",
+    "query": {
+      "key": "65f8319bc233b904f4fafa3eadcd65e215db3d1e"
+    },
+    "source": "ACS 1-year 2020",
+    "description": "Population for City",
+    "mappings": [
+      {
+        "destination": "data.city.economic.population",
+        "origin": "data",
+        "mapping": {
+          "arguments": "a",
+          "body": "return a"
+        }
+      }
+    ]
+  }
+]
