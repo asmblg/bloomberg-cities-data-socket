@@ -4,12 +4,30 @@
     "geojsons": [],
     "data": {
       "city": {
-        "economic": {
-
-        },
-        "newbusinesses": {
-          
-        }
+        "economic": {},
+        "newBusinesses": {},
+        "demographic": {}
+      },
+      "tract": {
+        "economic": {},
+        "newBusinesses": {},
+        "demographic": {}
+      }
+    }
+  },
+  {
+    "project": "Phoenix",
+    "geojsons": [],
+    "data": {
+      "city": {
+        "economic": {},
+        "newBusinesses": {},
+        "demographic": {}
+      },
+      "tract": {
+        "economic": {},
+        "newBusinesses": {},
+        "demographic": {}
       }
     }
   }

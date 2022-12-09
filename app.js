@@ -1,23 +1,24 @@
-const axios = require('axios');
-
-const config = require('config');
-const citiesData = require('data');
-
-
+const { CensusAPISocket } = require('./modules');
+const { getConfig } = require('./globalUtils/API');
 
 const run = async () => {
-  for await ({project, type, url, query, mappings} of config) {
-    if (type === 'API') {
-      const {data} = axios.get({
-        "url": url,
-        "query": query
-      });
-      const cityData = citiesData[project];
+  // Get Config from DB
+  const dataSocketConfig = await getConfig();
 
-      for await ({destination, origin, mapping} of mappings ) {
-        cityData[destination] = data[origin]
+  for await ({ project, type, url, query, mappings } of dataSocketConfig) {
+    switch (type) {
+      case 'CensusAPI': {
+        await CensusAPISocket({ project, url, query, mappings });
+        break;
       }
-
+      default: {
+        console.log('no case hit');
+      }
     }
   }
-}
+  return;
+};
+
+run().then(() => {
+  console.log('\nProcess complete.\n');
+});

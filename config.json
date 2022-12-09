@@ -1,21 +1,242 @@
 [
   {
     "project": "Tampa",
-    "type": "API",
-    "url": "https://api.census.gov/data/2021/acs/acs",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2021/acs/acs1",
     "query": {
-      "key": "65f8319bc233b904f4fafa3eadcd65e215db3d1e"
-
+      "get": "NAME,B01001_001E,B03002_006E,B03003_003E,B03002_003E,B03002_005E,B03002_007E",
+      "for": "place:71000",
+      "in": "state:12"
     },
-    "source": "ACS 1-year 2020",
+    "source": "ACS 1-year 2021",
     "description": "Population for City",
     "mappings": [
       {
-        "destination": "data.city.economic.population",
-        "origin": "data",
-        "mapping": {
-          "arguments": "a",
-          "body": "return a"
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": 1
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop_asian"
+        },
+        "origin": {
+          "valueIndex": 2
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop_hispanic"
+        },
+        "origin": {
+          "valueIndex": 3
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop_white"
+        },
+        "origin": {
+          "valueIndex": 4
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop_american_indian"
+        },
+        "origin": {
+          "valueIndex": 5
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop_pacific_islander"
+        },
+        "origin": {
+          "valueIndex": 6
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2020/acs/acs5",
+    "query": {
+      "get": "NAME,B01001_001E,B01001_002E,B01001_026E",
+      "for": "tract:*",
+      "in": "county:057&in=state:12"
+    },
+    "source": "ACS 5-year 2020",
+    "description": "Population for Tracts in County",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": 1,
+          "keyIndexes": [4, 5, 6]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "indicator": "male"
+        },
+        "origin": {
+          "valueIndex": 2,
+          "keyIndexes": [4, 5, 6]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "indicator": "female"
+        },
+        "origin": {
+          "valueIndex": 3,
+          "keyIndexes": [4, 5, 6]
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2021/acs/acs1",
+    "query": {
+      "get": "NAME,B01001_001E,B03002_006E,B03003_003E,B03002_003E,B03002_005E,B03002_007E",
+      "for": "place:55000",
+      "in": "state:04"
+    },
+    "source": "ACS 1-year 2021",
+    "description": "Population for City",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": 1
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop_asian"
+        },
+        "origin": {
+          "valueIndex": 2
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop_hispanic"
+        },
+        "origin": {
+          "valueIndex": 3
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop_white"
+        },
+        "origin": {
+          "valueIndex": 4
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop_american_indian"
+        },
+        "origin": {
+          "valueIndex": 5
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "indicator": "pop_pacific_islander"
+        },
+        "origin": {
+          "valueIndex": 6
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2020/acs/acs5",
+    "query": {
+      "get": "NAME,B01001_001E,B01001_002E,B01001_026E",
+      "for": "tract:*",
+      "in": "county:013&in=state:04"
+    },
+    "source": "ACS 5-year 2020",
+    "description": "Population for Tracts in County",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": 1,
+          "keyIndexes": [4, 5, 6]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "indicator": "male"
+        },
+        "origin": {
+          "valueIndex": 2,
+          "keyIndexes": [4, 5, 6]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "indicator": "female"
+        },
+        "origin": {
+          "valueIndex": 3,
+          "keyIndexes": [4, 5, 6]
         }
       }
     ]
