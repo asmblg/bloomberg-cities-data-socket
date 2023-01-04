@@ -14,7 +14,7 @@ const CensusAPISocket = async ({ project, url, query, mappings }) => {
   // SET PROJECT DATA IN DB -------->
   // console.log(util.inspect(updatedCityData, { showHidden: false, depth: null, colors: true }));
   fs.writeFile(
-    `./${project}-${query.for.search('tract') !== -1 ? 'tract' : 'state'}.json`,
+    `./data/${project}-${query.for.search('tract') !== -1 ? 'tract' : 'state'}.json`,
     JSON.stringify(updatedCityData),
     err => (err ? console.log(err) : null)
   );

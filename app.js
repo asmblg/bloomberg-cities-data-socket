@@ -1,4 +1,4 @@
-const { CensusAPISocket } = require('./modules');
+const { CensusAPISocket, WebDriverSocket } = require('./modules');
 const { getConfig } = require('./globalUtils/API');
 
 const run = async () => {
@@ -9,6 +9,10 @@ const run = async () => {
     switch (type) {
       case 'CensusAPI': {
         await CensusAPISocket({ project, url, query, mappings });
+        break;
+      }
+      case 'AYWebDriver': {
+        await WebDriverSocket.OfficeMarket('https://www.avisonyoung.us/web/phoenix/office-market-report')
         break;
       }
       default: {
