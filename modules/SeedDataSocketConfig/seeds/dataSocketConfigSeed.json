@@ -1,0 +1,1736 @@
+[
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2018/acs/acs1",
+    "query": {
+      "get": "NAME,B01001_001E,B03002_006E,B03003_003E,B03002_003E,B03002_005E,B03002_007E,B03002_008E,B03002_009E",
+      "for": "place:71000",
+      "in": "state:12"
+    },
+    "source": "ACS 1-year 2018",
+    "description": "Tampa City 2018 Population",
+    "tableDescription": "Detailed Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": "B01001_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_asian"
+        },
+        "origin": {
+          "valueIndex": "B03002_006E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_hispanic"
+        },
+        "origin": {
+          "valueIndex": "B03003_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_white"
+        },
+        "origin": {
+          "valueIndex": "B03002_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_american_indian"
+        },
+        "origin": {
+          "valueIndex": "B03002_005E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_pacific_islander"
+        },
+        "origin": {
+          "valueIndex": "B03002_007E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_other_race"
+        },
+        "origin": {
+          "valueIndex": "B03002_008E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_two_or_more"
+        },
+        "origin": {
+          "valueIndex": "B03002_009E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2018/acs/acs1/profile",
+    "query": {
+      "get": "NAME,DP05_0024E,DP05_0025E,DP04_0046PE",
+      "for": "place:71000",
+      "in": "state:12"
+    },
+    "source": "ACS 1-year 2018",
+    "description": "Tampa City 2018 Population",
+    "tableDescription": "Data Profile",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_over_65"
+        },
+        "origin": {
+          "valueIndex": "DP05_0024E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_under_19"
+        },
+        "origin": {
+          "valueIndex": "DP05_0025E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "p_owner_occupied"
+        },
+        "origin": {
+          "valueIndex": "DP04_0046PE"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2018/acs/acs1/subject",
+    "query": {
+      "get": "NAME,S1903_C03_001E,S2301_C04_001E,S1501_C02_015E,S0801_C01_046E",
+      "for": "place:71000",
+      "in": "state:12"
+    },
+    "source": "ACS 1-year 2018",
+    "description": "Tampa City 2018 Population",
+    "tableDescription": "Subject Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "med_hh_income"
+        },
+        "origin": {
+          "valueIndex": "S1903_C03_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "unemployment"
+        },
+        "origin": {
+          "valueIndex": "S2301_C04_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "p_with_ba"
+        },
+        "origin": {
+          "valueIndex": "S1501_C02_015E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "commute_time"
+        },
+        "origin": {
+          "valueIndex": "S0801_C01_046E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2019/acs/acs1",
+    "query": {
+      "get": "NAME,B01001_001E,B03002_006E,B03003_003E,B03002_003E,B03002_005E,B03002_007E,B03002_008E,B03002_009E",
+      "for": "place:71000",
+      "in": "state:12"
+    },
+    "source": "ACS 1-year 2019",
+    "description": "Tampa City 2019 Population",
+    "tableDescription": "Detailed Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": "B01001_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_asian"
+        },
+        "origin": {
+          "valueIndex": "B03002_006E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_hispanic"
+        },
+        "origin": {
+          "valueIndex": "B03003_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_white"
+        },
+        "origin": {
+          "valueIndex": "B03002_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_american_indian"
+        },
+        "origin": {
+          "valueIndex": "B03002_005E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_pacific_islander"
+        },
+        "origin": {
+          "valueIndex": "B03002_007E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_other_race"
+        },
+        "origin": {
+          "valueIndex": "B03002_008E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_two_or_more"
+        },
+        "origin": {
+          "valueIndex": "B03002_009E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2019/acs/acs1/profile",
+    "query": {
+      "get": "NAME,DP05_0024E,DP05_0025E,DP04_0046PE",
+      "for": "place:71000",
+      "in": "state:12"
+    },
+    "source": "ACS 1-year 2019",
+    "description": "Tampa City 2019 Population",
+    "tableDescription": "Data Profile",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_over_65"
+        },
+        "origin": {
+          "valueIndex": "DP05_0024E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_under_19"
+        },
+        "origin": {
+          "valueIndex": "DP05_0025E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "p_owner_occupied"
+        },
+        "origin": {
+          "valueIndex": "DP04_0046PE"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2019/acs/acs1/subject",
+    "query": {
+      "get": "NAME,S1903_C03_001E,S2301_C04_001E,S1501_C02_015E,S0801_C01_046E",
+      "for": "place:71000",
+      "in": "state:12"
+    },
+    "source": "ACS 1-year 2019",
+    "description": "Tampa City 2019 Population",
+    "tableDescription": "Subject Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "med_hh_income"
+        },
+        "origin": {
+          "valueIndex": "S1903_C03_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "unemployment"
+        },
+        "origin": {
+          "valueIndex": "S2301_C04_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "p_with_ba"
+        },
+        "origin": {
+          "valueIndex": "S1501_C02_015E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "commute_time"
+        },
+        "origin": {
+          "valueIndex": "S0801_C01_046E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2021/acs/acs1",
+    "query": {
+      "get": "NAME,B01001_001E,B03002_006E,B03003_003E,B03002_003E,B03002_005E,B03002_007E,B03002_008E,B03002_009E",
+      "for": "place:71000",
+      "in": "state:12"
+    },
+    "source": "ACS 1-year 2021",
+    "description": "Tampa City 2021 Population",
+    "tableDescription": "Detailed Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": "B01001_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_asian"
+        },
+        "origin": {
+          "valueIndex": "B03002_006E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_hispanic"
+        },
+        "origin": {
+          "valueIndex": "B03003_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_white"
+        },
+        "origin": {
+          "valueIndex": "B03002_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_american_indian"
+        },
+        "origin": {
+          "valueIndex": "B03002_005E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_pacific_islander"
+        },
+        "origin": {
+          "valueIndex": "B03002_007E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_other_race"
+        },
+        "origin": {
+          "valueIndex": "B03002_008E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_two_or_more"
+        },
+        "origin": {
+          "valueIndex": "B03002_009E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2021/acs/acs1/profile",
+    "query": {
+      "get": "NAME,DP05_0024E,DP05_0025E,DP04_0046PE",
+      "for": "place:71000",
+      "in": "state:12"
+    },
+    "source": "ACS 1-year 2021",
+    "description": "Tampa City 2021 Population",
+    "tableDescription": "Data Profile",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_over_65"
+        },
+        "origin": {
+          "valueIndex": "DP05_0024E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_under_19"
+        },
+        "origin": {
+          "valueIndex": "DP05_0025E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "p_owner_occupied"
+        },
+        "origin": {
+          "valueIndex": "DP04_0046PE"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2021/acs/acs1/subject",
+    "query": {
+      "get": "NAME,S1903_C03_001E,S2301_C04_001E,S1501_C02_015E,S0801_C01_046E",
+      "for": "place:71000",
+      "in": "state:12"
+    },
+    "source": "ACS 1-year 2021",
+    "description": "Tampa City 2021 Population",
+    "tableDescription": "Subject Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "med_hh_income"
+        },
+        "origin": {
+          "valueIndex": "S1903_C03_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "unemployment"
+        },
+        "origin": {
+          "valueIndex": "S2301_C04_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "p_with_ba"
+        },
+        "origin": {
+          "valueIndex": "S1501_C02_015E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "commute_time"
+        },
+        "origin": {
+          "valueIndex": "S0801_C01_046E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2020/acs/acs5",
+    "query": {
+      "get": "NAME,B01001_001E,B03002_006E,B03003_003E,B03002_003E,B03002_005E,B03002_007E,B03002_008E,B03002_009E",
+      "for": "tract:*",
+      "in": "county:057&in=state:12"
+    },
+    "source": "ACS 5-year 2020",
+    "description": "Tracts in Hillsborough County (FL) 2020 Population",
+    "tableDescription": "Detailed Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": "B01001_001E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_asian"
+        },
+        "origin": {
+          "valueIndex": "B03002_006E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_hispanic"
+        },
+        "origin": {
+          "valueIndex": "B03003_003E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_white"
+        },
+        "origin": {
+          "valueIndex": "B03002_003E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_american_indian"
+        },
+        "origin": {
+          "valueIndex": "B03002_005E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_pacific_islander"
+        },
+        "origin": {
+          "valueIndex": "B03002_007E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_other_race"
+        },
+        "origin": {
+          "valueIndex": "B03002_008E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_two_or_more"
+        },
+        "origin": {
+          "valueIndex": "B03002_009E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2020/acs/acs5/profile",
+    "query": {
+      "get": "NAME,DP05_0024E,DP05_0025E,DP04_0046PE",
+      "for": "tract:*",
+      "in": "county:057&in=state:12"
+    },
+    "source": "ACS 5-year 2020",
+    "description": "Tracts in Hillsborough County (FL) 2020 Population",
+    "tableDescription": "Data Profile",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_over_65"
+        },
+        "origin": {
+          "valueIndex": "DP05_0024E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_under_19"
+        },
+        "origin": {
+          "valueIndex": "DP05_0025E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "p_owner_occupied"
+        },
+        "origin": {
+          "valueIndex": "DP04_0046PE",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      }
+    ]
+  },
+  {
+    "project": "Tampa",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2020/acs/acs5/subject",
+    "query": {
+      "get": "NAME,S1903_C03_001E,S2301_C04_001E,S1501_C02_015E,S0801_C01_046E",
+      "for": "tract:*",
+      "in": "county:057&in=state:12"
+    },
+    "source": "ACS 5-year 2020",
+    "description": "Tracts in Hillsborough County (FL) 2020 Population",
+    "tableDescription": "Subject Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "med_hh_income"
+        },
+        "origin": {
+          "valueIndex": "S1903_C03_001E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "unemployment"
+        },
+        "origin": {
+          "valueIndex": "S2301_C04_001E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "p_with_ba"
+        },
+        "origin": {
+          "valueIndex": "S1501_C02_015E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "commute_time"
+        },
+        "origin": {
+          "valueIndex": "S0801_C01_046E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2018/acs/acs1",
+    "query": {
+      "get": "NAME,B01001_001E,B03002_006E,B03003_003E,B03002_003E,B03002_005E,B03002_007E,B03002_008E,B03002_009E",
+      "for": "place:55000",
+      "in": "state:04"
+    },
+    "source": "ACS 1-year 2018",
+    "description": "Phoenix 2018 Population",
+    "tableDescription": "Detailed Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": "B01001_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_asian"
+        },
+        "origin": {
+          "valueIndex": "B03002_006E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_hispanic"
+        },
+        "origin": {
+          "valueIndex": "B03003_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_white"
+        },
+        "origin": {
+          "valueIndex": "B03002_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_american_indian"
+        },
+        "origin": {
+          "valueIndex": "B03002_005E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_pacific_islander"
+        },
+        "origin": {
+          "valueIndex": "B03002_007E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_other_race"
+        },
+        "origin": {
+          "valueIndex": "B03002_008E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_two_or_more"
+        },
+        "origin": {
+          "valueIndex": "B03002_009E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2018/acs/acs1/profile",
+    "query": {
+      "get": "NAME,DP05_0024E,DP05_0025E,DP04_0046PE",
+      "for": "place:55000",
+      "in": "state:04"
+    },
+    "source": "ACS 1-year 2018",
+    "description": "Phoenix 2018 Population",
+    "tableDescription": "Data Profile",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_over_65"
+        },
+        "origin": {
+          "valueIndex": "DP05_0024E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "pop_under_19"
+        },
+        "origin": {
+          "valueIndex": "DP05_0025E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "p_owner_occupied"
+        },
+        "origin": {
+          "valueIndex": "DP04_0046PE"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2018/acs/acs1/subject",
+    "query": {
+      "get": "NAME,S1903_C03_001E,S2301_C04_001E,S1501_C02_015E,S0801_C01_046E",
+      "for": "place:55000",
+      "in": "state:04"
+    },
+    "source": "ACS 1-year 2018",
+    "description": "Phoenix 2018 Population",
+    "tableDescription": "Subject Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "med_hh_income"
+        },
+        "origin": {
+          "valueIndex": "S1903_C03_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "unemployment"
+        },
+        "origin": {
+          "valueIndex": "S2301_C04_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "p_with_ba"
+        },
+        "origin": {
+          "valueIndex": "S1501_C02_015E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2018",
+          "indicator": "commute_time"
+        },
+        "origin": {
+          "valueIndex": "S0801_C01_046E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2019/acs/acs1",
+    "query": {
+      "get": "NAME,B01001_001E,B03002_006E,B03003_003E,B03002_003E,B03002_005E,B03002_007E,B03002_008E,B03002_009E",
+      "for": "place:55000",
+      "in": "state:04"
+    },
+    "source": "ACS 1-year 2019",
+    "description": "Phoenix 2019 Population",
+    "tableDescription": "Detailed Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": "B01001_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_asian"
+        },
+        "origin": {
+          "valueIndex": "B03002_006E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_hispanic"
+        },
+        "origin": {
+          "valueIndex": "B03003_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_white"
+        },
+        "origin": {
+          "valueIndex": "B03002_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_american_indian"
+        },
+        "origin": {
+          "valueIndex": "B03002_005E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_pacific_islander"
+        },
+        "origin": {
+          "valueIndex": "B03002_007E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_other_race"
+        },
+        "origin": {
+          "valueIndex": "B03002_008E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_two_or_more"
+        },
+        "origin": {
+          "valueIndex": "B03002_009E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2019/acs/acs1/profile",
+    "query": {
+      "get": "NAME,DP05_0024E,DP05_0025E,DP04_0046PE",
+      "for": "place:55000",
+      "in": "state:04"
+    },
+    "source": "ACS 1-year 2019",
+    "description": "Phoenix 2019 Population",
+    "tableDescription": "Data Profile",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_over_65"
+        },
+        "origin": {
+          "valueIndex": "DP05_0024E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "pop_under_19"
+        },
+        "origin": {
+          "valueIndex": "DP05_0025E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "p_owner_occupied"
+        },
+        "origin": {
+          "valueIndex": "DP04_0046PE"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2019/acs/acs1/subject",
+    "query": {
+      "get": "NAME,S1903_C03_001E,S2301_C04_001E,S1501_C02_015E,S0801_C01_046E",
+      "for": "place:55000",
+      "in": "state:04"
+    },
+    "source": "ACS 1-year 2019",
+    "description": "Phoenix 2019 Population",
+    "tableDescription": "Subject Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "med_hh_income"
+        },
+        "origin": {
+          "valueIndex": "S1903_C03_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "unemployment"
+        },
+        "origin": {
+          "valueIndex": "S2301_C04_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "p_with_ba"
+        },
+        "origin": {
+          "valueIndex": "S1501_C02_015E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2019",
+          "indicator": "commute_time"
+        },
+        "origin": {
+          "valueIndex": "S0801_C01_046E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2021/acs/acs1",
+    "query": {
+      "get": "NAME,B01001_001E,B03002_006E,B03003_003E,B03002_003E,B03002_005E,B03002_007E,B03002_008E,B03002_009E",
+      "for": "place:55000",
+      "in": "state:04"
+    },
+    "source": "ACS 1-year 2021",
+    "description": "Phoenix 2021 Population",
+    "tableDescription": "Detailed Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": "B01001_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_asian"
+        },
+        "origin": {
+          "valueIndex": "B03002_006E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_hispanic"
+        },
+        "origin": {
+          "valueIndex": "B03003_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_white"
+        },
+        "origin": {
+          "valueIndex": "B03002_003E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_american_indian"
+        },
+        "origin": {
+          "valueIndex": "B03002_005E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_pacific_islander"
+        },
+        "origin": {
+          "valueIndex": "B03002_007E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_other_race"
+        },
+        "origin": {
+          "valueIndex": "B03002_008E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_two_or_more"
+        },
+        "origin": {
+          "valueIndex": "B03002_009E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2021/acs/acs1/profile",
+    "query": {
+      "get": "NAME,DP05_0024E,DP05_0025E,DP04_0046PE",
+      "for": "place:55000",
+      "in": "state:04"
+    },
+    "source": "ACS 1-year 2021",
+    "description": "Phoenix 2021 Population",
+    "tableDescription": "Data Profile",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_over_65"
+        },
+        "origin": {
+          "valueIndex": "DP05_0024E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "pop_under_19"
+        },
+        "origin": {
+          "valueIndex": "DP05_0025E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "p_owner_occupied"
+        },
+        "origin": {
+          "valueIndex": "DP04_0046PE"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2021/acs/acs1/subject",
+    "query": {
+      "get": "NAME,S1903_C03_001E,S2301_C04_001E,S1501_C02_015E,S0801_C01_046E",
+      "for": "place:55000",
+      "in": "state:04"
+    },
+    "source": "ACS 1-year 2021",
+    "description": "Phoenix 2021 Population",
+    "tableDescription": "Subject Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "med_hh_income"
+        },
+        "origin": {
+          "valueIndex": "S1903_C03_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "unemployment"
+        },
+        "origin": {
+          "valueIndex": "S2301_C04_001E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "p_with_ba"
+        },
+        "origin": {
+          "valueIndex": "S1501_C02_015E"
+        }
+      },
+      {
+        "destination": {
+          "geo": "city",
+          "category": "demographic",
+          "year": "2021",
+          "indicator": "commute_time"
+        },
+        "origin": {
+          "valueIndex": "S0801_C01_046E"
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2020/acs/acs5",
+    "query": {
+      "get": "NAME,B01001_001E,B03002_006E,B03003_003E,B03002_003E,B03002_005E,B03002_007E,B03002_008E,B03002_009E",
+      "for": "tract:*",
+      "in": "county:013&in=state:04"
+    },
+    "source": "ACS 5-year 2020",
+    "description": "Tracts in Maricopa County (AZ) 2020 Population",
+    "tableDescription": "Detailed Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop"
+        },
+        "origin": {
+          "valueIndex": "B01001_001E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_asian"
+        },
+        "origin": {
+          "valueIndex": "B03002_006E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_hispanic"
+        },
+        "origin": {
+          "valueIndex": "B03003_003E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_white"
+        },
+        "origin": {
+          "valueIndex": "B03002_003E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_american_indian"
+        },
+        "origin": {
+          "valueIndex": "B03002_005E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_pacific_islander"
+        },
+        "origin": {
+          "valueIndex": "B03002_007E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_other_race"
+        },
+        "origin": {
+          "valueIndex": "B03002_008E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_two_or_more"
+        },
+        "origin": {
+          "valueIndex": "B03002_009E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2020/acs/acs5/profile",
+    "query": {
+      "get": "NAME,DP05_0024E,DP05_0025E,DP04_0046PE",
+      "for": "tract:*",
+      "in": "county:013&in=state:04"
+    },
+    "source": "ACS 5-year 2020",
+    "description": "Tracts in Maricopa County (AZ) 2020 Population",
+    "tableDescription": "Data Profile",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_over_65"
+        },
+        "origin": {
+          "valueIndex": "DP05_0024E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "pop_under_19"
+        },
+        "origin": {
+          "valueIndex": "DP05_0025E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "p_owner_occupied"
+        },
+        "origin": {
+          "valueIndex": "DP04_0046PE",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      }
+    ]
+  },
+  {
+    "project": "Phoenix",
+    "type": "CensusAPI",
+    "url": "https://api.census.gov/data/2020/acs/acs5/subject",
+    "query": {
+      "get": "NAME,S1903_C03_001E,S2301_C04_001E,S1501_C02_015E,S0801_C01_046E",
+      "for": "tract:*",
+      "in": "county:013&in=state:04"
+    },
+    "source": "ACS 5-year 2020",
+    "description": "Tracts in Maricopa County (AZ) 2020 Population",
+    "tableDescription": "Subject Tables",
+    "frequency": "annual",
+    "mappings": [
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "med_hh_income"
+        },
+        "origin": {
+          "valueIndex": "S1903_C03_001E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "unemployment"
+        },
+        "origin": {
+          "valueIndex": "S2301_C04_001E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "p_with_ba"
+        },
+        "origin": {
+          "valueIndex": "S1501_C02_015E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      },
+      {
+        "destination": {
+          "geo": "tract",
+          "category": "demographic",
+          "year": "2020",
+          "indicator": "commute_time"
+        },
+        "origin": {
+          "valueIndex": "S0801_C01_046E",
+          "keyIndexes": ["state", "county", "tract"]
+        }
+      }
+    ]
+  }
+]

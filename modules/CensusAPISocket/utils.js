@@ -11,32 +11,36 @@ const getCensusData = async (url, query) => {
   }
 
   const apiURL = queryString ? `${url}?${queryString}` : url;
-  console.log({ apiURL });
-
   const { data } = await axios.get(apiURL);
+
   return data;
 };
 
-const mapInNewData = ({ censusData, cityData, mappings }) => {
-  const dbObj = { ...cityData };
+const mapInNewData = ({ censusData, data, mappings }) => {
+  const obj = { ...data };
+  const keysArr = censusData[0];
   // Remove header array from returned census data
   const dataArr = censusData.slice(1);
 
   dataArr.forEach(arr => {
     mappings.forEach(
-      ({ destination: { geo, category, indicator }, origin: { valueIndex, keyIndexes } }) => {
-        const key = keyIndexes ? keyIndexes.map(i => arr[i]).join('') : null;
+      ({ destination: { geo, category, indicator, year }, origin: { valueIndex, keyIndexes } }) => {
+        const key = keyIndexes ? keyIndexes.map(key => arr[keysArr.indexOf(key)]).join('') : null;
 
-        dbObj.data[geo][category][indicator] = !key
-          ? arr[valueIndex]
+        if (!obj[geo][category][indicator]) {
+          obj[geo][category][indicator] = {};
+        }
+
+        obj[geo][category][indicator][year] = !key
+          ? arr[keysArr.indexOf(valueIndex)]
           : {
-              ...dbObj.data[geo][category][indicator],
-              [key]: arr[valueIndex]
+              ...obj[geo][category][indicator][year],
+              [key]: arr[keysArr.indexOf(valueIndex)]
             };
       }
     );
   });
-  return dbObj;
+  return obj;
 };
 
 module.exports = { getCensusData, mapInNewData };
