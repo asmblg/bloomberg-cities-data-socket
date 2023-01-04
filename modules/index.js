@@ -1,3 +1,4 @@
 module.exports = {
-  CensusAPISocket: require('./CensusAPISocket')
+  CensusAPISocket: require('./CensusAPISocket'),
+  WebDriverSocket: require('./WebDriverSocket')
 };

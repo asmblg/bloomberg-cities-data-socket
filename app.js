@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { CensusAPISocket, WebDriverSocket } = require('./modules');
 const { getDataSocketConfig, getDbConnection } = require('./globalUtils/API');
+const util = require('util');
 
 
 const run = async () => {
@@ -18,7 +19,8 @@ const run = async () => {
       query,
       mappings,
       description,
-      tableDescription
+      tableDescription,
+      source
     } of dataSocketConfig) {
       switch (type) {
         case 'CensusAPI': {
@@ -34,14 +36,12 @@ const run = async () => {
           break;
         }
         case 'WebDriver': {
-          await WebDriverSocket.OfficeMarket({
-            url: 'https://www.avisonyoung.us/web/phoenix/office-market-report',
-            source: 'Avison Young'
-          })
+          await WebDriverSocket({url, source, project});
           break;
         }
         default: {
-          console.log('no case hit');
+          console.log('Data Socket Type Unsupported:', description);
+          break;
         }
       }
     }
