@@ -105,3 +105,6 @@ dist
 
 # MISC
 devRef
+
+# Data
+data/
