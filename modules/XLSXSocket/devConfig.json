@@ -1,0 +1,75 @@
+[
+  {
+    "project": "Phoenix",
+    "type": "XLSX",
+    "directoryID": "01E52WSOTFV4VGJ2FU6VAISKVCCCF6IBYI",
+    "fileName" : "JLL US Office Statistics - Q4 2022 - Phoenix",
+    "sheetName": "Market Stats",
+    "mappings" : [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "office space",
+          "year": "2022 Q4",
+          "indicator": "vacancy_rate"
+        },
+        "origin" : {
+          "rowIndex": 16,
+          "columnIndex": 7
+        } 
+      },
+      {
+        "destination": {
+          "geo": "submarket",
+          "category": "office space",
+          "year": "2022 Q4",
+          "indicator": "vacancy_rate"
+        },
+        "origin" : {
+          "rowIndexStart": 6,
+          "rowIndexEnd": 15,
+          "keyColumnIndex": 0,
+          "dataColumnIndex": 7
+
+        } 
+      }  
+    ]  
+  },
+  {
+    "project": "Tampa",
+    "type": "XLSX",
+    "directoryID": "01E52WSOTFV4VGJ2FU6VAISKVCCCF6IBYI",
+    "fileName" : "JLL US Office Statistics - Q4 2022 - Tampa Bay",
+    "sheetName": "Market Stats",
+    "mappings" : [
+      {
+        "destination": {
+          "geo": "city",
+          "category": "office space",
+          "year": "2022 Q4",
+          "indicator": "vacancy_rate"
+        },
+        "origin" : {
+          "rowIndex": 16,
+          "columnIndex": 7
+        } 
+      },
+      {
+        "destination": {
+          "geo": "submarket",
+          "category": "office space",
+          "year": "2022 Q4",
+          "indicator": "vacancy_rate"
+        },
+        "origin" : {
+          "rowIndexStart": 6,
+          "rowIndexEnd": 15,
+          "keyColumnIndex": 0,
+          "dataColumnIndex": 7
+
+        } 
+      }   
+    ]
+  }
+
+]

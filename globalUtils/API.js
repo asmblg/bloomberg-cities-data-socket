@@ -55,7 +55,7 @@ const createDataDoc = (db, project) =>
 const getProjectData = (db, project) =>
   new Promise((resolve, reject) => {
     const collection = db.collection('data');
-    collection.find({ project }, (err, docs) => {
+    collection.find({ project: project.toLowerCase() }, (err, docs) => {
       if (err) {
         reject(err);
       } else if (docs.length === 1) {

@@ -1,38 +1,68 @@
+require('dotenv').config();
+
 const puppeteer = require('puppeteer');
 const https = require('https');
 const fs = require('fs');
 const util = require('util');
+const PdfExtractor = require('pdf-extractor').PdfExtractor;
+const Tesseract = require('tesseract.js');
 
+// const pdfTableExtractor = require('@florpor/pdf-table-extractor') 
 
-const Navigate = async (baseURL) => {
-  const browser = await puppeteer.launch();
+const Navigate = async ({navigationArray}) => {
+  const browser = await puppeteer.launch({
+    headless: true
+  });
   const page = await browser.newPage();
+
   const result = {};
 
-  const navigationArray = [
-    {
-      action: 'goto',
-      url: baseURL,
-      options: {timeout: 10000}
-    },
-    {
-      action: 'waitForSelector',
-      selector: '.ay-pdf-link'
-    },
-    { 
-      action: 'getLinkFromButton',
-      selector: '.ay-pdf-link',
-      setResult: true
-    }
-  ];
-  
-  for await ({action, url, options, selector, setResult} of navigationArray) {
+  for await ({ 
+    action,
+    url,
+    options,
+    selector,
+    setResult,
+    value 
+  } of navigationArray) {
+ 
     switch (action) {
+      case 'waitForNavigation':
+        await page.waitForNavigation();
+        break;
       case 'goto':
         await page.goto(url, options);
         break;
       case 'waitForSelector':
         await page.waitForSelector(selector);
+        break;
+      case 'waitForTimeout':
+        await new Promise(r => setTimeout(r, value));
+        break;      
+      case 'click':
+        await page.click(selector);
+        break;
+      case 'select':
+        await page.select(selector, value);
+        break;
+      case 'checkBox':
+        await  page.$eval(selector, el => el.checked = 'checked')
+        break;
+      case 'input':
+        await  page.type(selector, value)
+        break;
+      case 'inputUserName':
+        await  page.type(selector, process.env.DATA_AXEL_ACCOUNT_ID)
+        break;
+      case 'inputPassword':
+        await  page.type(selector, process.env.DATA_AXEL_PASSWORD)
+        break;
+      case 'getString':
+        const n = await page.waitForSelector(selector);
+        const text = await (await n.getProperty('textContent')).jsonValue()
+        if (setResult) {
+          result.text = text;
+        };        
         break;
       case 'getLinkFromButton':
         const [link] = await page.evaluate(resultsSelector => {
@@ -55,42 +85,58 @@ const Navigate = async (baseURL) => {
   return result;
 };
 
-const getAYReport = async ({link, project}) => 
- new Promise((resolve) => {
+const parseTextFromImage = async ({imagePath, rowSearch, valueIndex}) => {
+  const results = {};
+  await Tesseract.recognize(
+    imagePath,
+    'eng',
+    // { logger: m => console.log(m) }
+  ).then(({ data: { text } }) => {
+    const [row] = text
+      .split('\n')
+      .filter(row => row.search(rowSearch) > -1);
+
+    console.log(text);
+    console.log(row.split(' ')[valueIndex])
+    
+  })
+  return results;
+};
+
+const parsePDFviaLink = async ({ link, project, tablePage }) =>
+  new Promise((resolve) => {
     const file = fs.createWriteStream(`./data/${project}-report.pdf`);
     https.get(link, response => {
-        response.pipe(file);
+      response.pipe(file);
 
-        // after download completed close filestream
-        file.on("finish",() => {
-          file.close();
+      // after download completed close filestream
+      file.on("finish", () => {
+        file.close();
 
-          console.log(project, "Download Completed");
-          // let dataBuffer = fs.readFileSync(`./data/${project}-report.pdf`);
-          pdfTableExtractor(`./data/${project}-report.pdf`).then(async data => {
+        console.log(project, "Download Completed");
 
-            // // number of pages
-            // console.log(data.numpages);
-            // // number of rendered pages
-            // console.log(data.numrender);
-            // // PDF info
-            // console.log(data.info);
-            // // PDF metadata
-            // console.log(data.metadata);
-            // // PDF.js version
-            // // check https://mozilla.github.io/pdf.js/getting_started/
-            // console.log(data.version);
-            // PDF text
-            // const array = data.text.split('\n')
-            // console.log(array.slice(array.indexOf('Office market activity')));
-            // console.log(util.inspect(data, false, null, true));
-            // resolve(console.log(`${project} ${data ? 'has data':'does not have data'}.`))
-            resolve(console.log(util.inspect(data.pageTables[0].tables[0], false, null, true)))
-            // res = data
+
+        const pdfExtractor = new PdfExtractor('./data/pdfparse/', {
+            viewportScale: (width, height) => {
+              //dynamic zoom based on rendering a page to a fixed page size 
+              if (width > height) {
+                //landscape: 1100px wide
+                return 1100 / width;
+              }
+              //portrait: 800px wide
+              return 800 / width;
+            },
+            pageRange: [tablePage, tablePage],
           });
-        })
-        .on('error', err => console.log(err));
-    })    
-})
 
-module.exports = { Navigate, getAYReport }
+       pdfExtractor.parse(`./data/${project}-report.pdf`).then(async () => {
+          resolve(console.log('PDF Parse Complete.'))
+        }).catch(function (err) {
+          console.error('Error: ' + err);
+        });
+      })
+      .on('error', err => console.log(err));
+    })
+});
+
+module.exports = { Navigate, parsePDFviaLink, parseTextFromImage }

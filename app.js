@@ -1,16 +1,19 @@
 require('dotenv').config();
-const { CensusAPISocket, WebDriverSocket } = require('./modules');
+const { CensusAPISocket, WebDriverSocket, XLSXSocket } = require('./modules');
 const { getDataSocketConfig, getDbConnection } = require('./globalUtils/API');
-const util = require('util');
+// const util = require('util');
 
 
 const run = async () => {
   // Ensure DB URI is present
   if (process.env.MONGODB_URI) {
     // Connect to DB
-    const db = await getDbConnection(process.env.MONGODB_URI);
+    // const db = await getDbConnection(process.env.MONGODB_URI);
+
     // Get config array from DB
-    const dataSocketConfig = await getDataSocketConfig(db);
+    // const dataSocketConfigs = await getDataSocketConfig(db);
+    const dataSocketConfigs = require('./modules/WebDriverSocket/devConfig.json');
+
     // Execute data socket by data socket type
     for await ({
       project,
@@ -20,27 +23,51 @@ const run = async () => {
       mappings,
       description,
       tableDescription,
-      source
-    } of dataSocketConfig) {
+      source,
+      sheetName,
+      fileName,
+      directoryID,
+      startDate,
+      endDate,
+      queryID    
+    } of dataSocketConfigs) {
       switch (type) {
-        case 'CensusAPI': {
-          await CensusAPISocket({
-            db,
-            project,
-            url,
-            query,
-            mappings,
-            description,
-            tableDescription
-          });
-          break;
-        }
+        // case 'CensusAPI': {
+        //   await CensusAPISocket({
+        //     db,
+        //     project,
+        //     url,
+        //     query,
+        //     mappings,
+        //     description,
+        //     tableDescription
+        //   });
+        //   break;
+        // }
         case 'WebDriver': {
-          await WebDriverSocket({url, source, project});
+          await WebDriverSocket({
+            source,
+            startDate,
+            endDate,
+            queryID          
+          }).then(result => console.log(project, startDate, endDate, result));
           break;
         }
+        // case 'XLSX' : {
+        //   await XLSXSocket({
+        //     project,
+        //     sheetName,
+        //     mappings,
+        //     fileName,
+        //     directoryID,
+        //     clientID: process.env.MS_CLIENT_ID,
+        //     clientSecret: process.env.MS_CLIENT_SECRET,
+        //     db: db
+        //   });
+        //   break;
+        // }
         default: {
-          console.log('Data Socket Type Unsupported:', description);
+          console.log(type, 'Data Socket Unsupported:', description);
           break;
         }
       }
