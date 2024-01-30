@@ -1,20 +1,25 @@
 # Documentation for Data Socket Application
-
 This document provides a comprehensive guide for creating and modifying configuration objects for the Data Socket application which pulls data in various formats from an array of sources, processes it, and inserts it into a Mongo DB collection.
 
 ## Table of Contents
 - [Introduction](#introduction)
+- [Installation](#installation)
+- [Running the Application Locally](#running-the-application)
+- [Scheduling Data Retrieval Events](#scheduling-a-new-data-retrieval-event)
 - [Configuration Structure](#configuration-structure)
 - [Configuration Parameters by Type](#configuration-parameters-by-type)
-- [Creating a New Configuration](#creating-a-new-configuration)
+  - [Global Parameters](#global-parameters)
+  - [(Almost) Global Parameters](#almost-global-parameters)
+  - [Bureau of Labor Statistics (BLS) API Parameters](#bureau-of-labor-statistics-bls-api-parmeters)
+  - [US Census Bureau API Parameters](#us-census-bureau-api-parameters)
+  - [XLSX File from OneDrive Parameters](#xlsx-file-from-onedrive-parameters)
+  - [DataAxel WebDriver Parameters](#dataaxel-webdriver-parameters)
 
 ## Introduction
 The configuration objects are crucial for the Data Socket application to retrieve, process, and map data from the each source to the database collection serving the frontend dashboard. This guide will help you understand how to create and modify these configuration objects effectively.
 
-
 ## Installation
-
-Before you begin, ensure you have [Node.js](https://nodejs.org/) and [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed on your system.
+Before you begin, ensure you have [Node.js](https://nodejs.org/) and [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed on your system.
 
 1. **Clone the repository:**
     ```bash
@@ -77,13 +82,13 @@ Create a `.env` file in the root of your installed application.  Populate the fi
       SAFEGRAPH_DB_URI=mongodb://127.0.0.1:27017
       ```
 
-## Running the Application 
+## Running the Application Locally 
 ```
 $ npm start
 ```
 
 
-## Scheduling a New Data Retrieval Event
+## Scheduling Data Retrieval Events
 1. Start with a template configuration object.
 2. Fill in each key based on the required [configuation parmaters](#configuration-parameters-by-type) and your data retrieval needs.
 3. Insert configuration object in the sockets collection on the database.
@@ -102,14 +107,14 @@ All configuration objects will need these parameters with valid values.
 ### (Almost) Global Parameters
 - **project**: Name or identifier of the project (`phoenix`, `baltimore`, `tampa`).
 - **description**: General description of the data being retrieved.
-- **mapping**: Object defining how the retrieved data is inserted into the data collection serving the frontend dashboard.  This is used to configure: [Bureau of Labor Statistics (BLS) API Paremeters](#bureau-of-labor-statistics-bls-api-paremeters), [DataAxel WebDriver Parameters](#dataaxel-webdriver-parameters)
+- **mapping**: Object defining how the retrieved data is inserted into the data collection serving the frontend dashboard.  This is used to configure: [Bureau of Labor Statistics (BLS) API Parmeters](#bureau-of-labor-statistics-bls-api-parmeters), [DataAxel WebDriver Parameters](#dataaxel-webdriver-parameters).
   - **geotype**: Geographical type of the data (e.g., `city`).
   - **geo**: key for specific geographic area (e.g., `atlanta`)
   - **year**: Key for year of data (e.g., `2024`).
   - **quarter**: Key for quarter of data. (e.g., `1` for Q1).
   - **category** : Key for high-level category (e.g., `realestate`).
   - **section**: Key for section of a category (e.g., `industrial`).
-- **mappings**: Array of mapping objects to define how data in the file is extracted, processed and inserted into data collection serving the frontend dashboard.  This is used to configure: [XLSX File from OneDrive Parameters](#xlsx-file-from-onedrive-parameters) 
+- **mappings**: Array of mapping objects to define how data in the file is extracted, processed and inserted into data collection serving the frontend dashboard.  This is used to configure: [XLSX File from OneDrive Parameters](#xlsx-file-from-onedrive-parameters), [US Census Bureau API Parameters](#us-census-bureau-api-parameters). 
   - **destination**: Specifies the destination mapping for the data.
     - **geo**: Geographical identifier for the data destination.
     - **category**: Data category for the destination (e.g., `jobs`).
@@ -126,7 +131,7 @@ All configuration objects will need these parameters with valid values.
       - **field**: Field name to apply the filter on.
       - **value**: Value to filter by (e.g., `Baltimore City County, MD`).
 
-### Bureau of Labor Statistics (BLS) API Paremeters
+### Bureau of Labor Statistics (BLS) API Parameters
 ```json
 {
   "type": "blsAPI"
@@ -155,7 +160,7 @@ All configuration objects will need these parameters with valid values.
 - **source**: Description of the data source (e.g., `ACS 1-year 2022`).
 - **description**: General description of the data being retrieved (e.g., `Tampa City 2022 Subject Table Indicators`).
 - **tableDescription**: Describes the type of table being accessed (e.g., `Subject Tables`).
-- **mappings**: see [mappings](#almost-global-parameters) and unique paremeters below
+- **mappings**: see [mappings](#almost-global-parameters) and additional parmeters below
   - **origin**
     - **valueIndex**: The variable key from the API response to map (e.g., `S1903_C03_001E` for median household income).
 
@@ -165,7 +170,7 @@ All configuration objects will need these parameters with valid values.
   ```
   - **geoType**: Value for finding the associated GeoJSON in the geos collection (e.g.`Zip Codes`)
   - **joinField**: Field for relating the incoming data with the appropriate feature in GeoJSON
-  - **mappings**: see [mappings](#almost-global-parameters) and unique paremeters below
+  - **mappings**: see [mappings](#almost-global-parameters) and additional parmeters below
     - **origin**
       - **keyIndexes**: Array of keys for concatenating values from the data to join with GeoJSON features based on `joinField`  (e.g., `["state", "county", "tract"]`). 
 
