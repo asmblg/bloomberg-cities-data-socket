@@ -1,6 +1,6 @@
 # Documentation for Data Socket Application
 
-This document provides a comprehensive guide for creating and modifying configuration objects for the Data Socket application, which pulls data in various formats from an array of sources.
+This document provides a comprehensive guide for creating and modifying configuration objects for the Data Socket application which pulls data in various formats from an array of sources, processes it, and inserts it into a Mongo DB collection.
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -11,13 +11,85 @@ This document provides a comprehensive guide for creating and modifying configur
 ## Introduction
 The configuration objects are crucial for the Data Socket application to retrieve, process, and map data from the each source to the database collection serving the frontend dashboard. This guide will help you understand how to create and modify these configuration objects effectively.
 
-## Configuration Structure
-The configuration objects are structured in the JSON format, consisting of several key-value pairs, each serving a specific purpose in the data retrieval process.
+
+## Installation
+
+Before you begin, ensure you have [Node.js](https://nodejs.org/) and [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed on your system.
+
+1. **Clone the repository:**
+    ```bash
+    $ git clone https://github.com/asmblg/bloomberg-cities-data-socket.git
+    $ cd bloomberg-cities-data-socket
+    ```
+2. Install Dependencies
+    ```bash
+    $ npm install
+    ```
+3. Environment Variables
+Create a `.env` file in the root of your installed application.  Populate the file with the following values.
+
+    - MongoDB connection string. Replace `username`, `password`, and `clusterName` with your MongoDB credentials.
+      ```
+      MONGODB_URI=mongodb+srv://username:password@clusterName.mongodb.net/?retryWrites=true&w=majority
+      ```
+
+    - Name of the database you are connecting to in MongoDB
+      ```
+      DATABASE_NAME=YourDatabaseName
+      ```
+
+    - Microsoft User ID. Obtain from your Microsoft Azure or Office 365 account.
+      ```
+      MS_USER_ID=YourMicrosoftUserID
+      ```
+
+    - Microsoft Client ID. Obtain from your Microsoft Azure or Office 365 application settings.
+      ```
+      MS_CLIENT_ID=YourMicrosoftClientID
+      ```
+
+    - Microsoft Client Secret. Obtain from your Microsoft Azure or Office 365 application settings.
+      ```
+      MS_CLIENT_SECRET=YourMicrosoftClientSecret
+      ```
+
+    - API key for Bureau of Labor Statistics. Register at BLS Website to obtain the key.
+      ```
+      BLS_API_KEY=YourBureauOfLaborStatisticsAPIKey
+      ```
+
+    - Account ID for Data Axel. This is typically your registered email address.
+      ```
+      DATA_AXEL_ACCOUNT_ID=YourDataAxelUserName
+      ```
+
+    - Password for your Data Axel account.
+      ```
+      DATA_AXEL_PASSWORD=YourDataAxelPassword
+      ```
+    - API key for Safegraph data download. Obtain from your key by setting it up with the Dewey Marketplace platform.
+      ```
+      SAFEGRAPH_API_KEY=YourSafegraphAPIKey
+      ```
+
+    - Local or cloud database URI for storing large amounts of raw place and spending data.
+      ```
+      SAFEGRAPH_DB_URI=mongodb://127.0.0.1:27017
+      ```
+
+## Running the Application 
+```
+$ npm start
+```
+
 
 ## Scheduling a New Data Retrieval Event
 1. Start with a template configuration object.
 2. Fill in each key based on the required [configuation parmaters](#configuration-parameters-by-type) and your data retrieval needs.
 3. Insert configuration object in the sockets collection on the database.
+
+## Configuration Structure
+The configuration objects are structured in the JSON format, consisting of several key-value pairs, each serving a specific purpose in the data retrieval process.
 
 ## Configuration Parameters by Type
 Each configuration object contains parameters determining when a socket module will run, how it will get data and format it, and where it put the data in data collection serving the front dashboard.
@@ -127,10 +199,10 @@ All configuration objects will need these parameters with valid values.
 - **endDate**: End date for the data retrieval query (formatted as `MM/DD/YYYY`). If NOT included along with `startDate`, the total for ALL availalbe periods will queried.
 - **mapping**: see [mapping](#almost-global-parameters).
 - **queries**: Array of query objects to be executed by the web driver.
-  - **queryID**: Unique identifier for the query created and saved on the [Data Axel platform](https://account.dataaxleusa.com/).  After a query is created and saved, the id will need to be extracted by inspecting the page at at https://core.dataaxleusa.com/savedlists.  If you're unfamiliar with the process inspecting elements in your browswer, here is a [How To](https://developer.chrome.com/docs/devtools/open).  The id can be found in the HTML for the *View Query* link at `orderId=XXXXXXXXXXX`:
-   ```html
-  <a href="/MyAccount/ReviewSavedList?orderId=1285433540">View Criteria</a>
-  ```
+  - **queryID**: Unique identifier for the query created and saved on the [Data Axel platform](https://account.dataaxleusa.com/).  After a query is created and saved, the id will need to be extracted by inspecting the page at at https://core.dataaxleusa.com/savedlists.  If you're unfamiliar with the process inspecting elements in your browswer, here is a [How To](https://developer.chrome.com/docs/devtools/open).  The id can be found in the HTML for the *View Query* link at `orderId=XXXXXXXXXX`:
+    ```html
+      <a href="/MyAccount/ReviewSavedList?orderId=XXXXXXXXXX">View Criteria</a>
+    ```
   - **field**: Key for where the retrieved data will be stored (e.g., `total`).
 
 
