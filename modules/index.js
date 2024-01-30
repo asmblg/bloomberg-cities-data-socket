@@ -1,5 +1,7 @@
 module.exports = {
-  CensusAPISocket: require('./CensusAPISocket'),
+  APISocket: require('./APISocket'),
   WebDriverSocket: require('./WebDriverSocket'),
-  XLSXSocket: require('./XLSXSocket')
+  OneDriveSocket: require('./OneDriveSocket'),
+  GoogleSheetSocket: require('./GoogleSheetSocket'),
+  SafeGraphSocket: require('./SafeGraphSocket')
 };

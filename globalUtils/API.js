@@ -11,17 +11,33 @@ const getDbConnection = uri =>
     }
   });
 
-const getDataSocketConfig = db =>
-  new Promise((resolve, reject) => {
-    const collection = db.collection('dataSocketConfig');
-    collection.find((err, docs) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(docs);
-      }
+const getDataSocketConfig = (collection, query) => {
+  // new Promise((resolve, reject) => {
+  //   console.log(query);
+  //   // const collection = db.collection('dataSocketConfig');
+  //   collection.find(query, (err, docs) => {
+  //     if (err) {
+  //       reject(err);
+  //     } else {
+  //       resolve(docs);
+  //     }
+  //   });
+  console.log(query);
+  // Ensure the collection is properly referenced
+  if (!collection) {
+    return Promise.reject(new Error("Collection not provided"));
+  }
+
+  // Use MongoDB's built-in promise support
+  return collection.find(query).toArray()
+    .then(docs => {
+      return docs; // Return the documents
+    })
+    .catch(err => {
+      console.error("Error retrieving data:", err);
+      throw err; // Rethrow or handle error as needed
     });
-  });
+  };
 
 const createDataDoc = (db, project) =>
   new Promise((resolve, reject) => {

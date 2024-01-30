@@ -20,15 +20,25 @@
   "homepage": "https://github.com/asmblg/bloomberg-cities-data-socket#readme",
   "dependencies": {
     "@florpor/pdf-table-extractor": "^1.0.6",
+    "@google-cloud/local-auth": "^2.1.0",
     "@microsoft/microsoft-graph-client": "^3.0.4",
+    "@turf/turf": "^6.5.0",
     "axios": "^1.2.2",
+    "axios-retry": "^3.9.1",
+    "csv-parser": "^3.0.0",
     "dotenv": "^16.0.3",
     "glob": "^8.0.3",
+    "googleapis": "^105.0.0",
+    "mongodb": "^5.1.0",
     "mongojs": "^3.1.0",
+    "numeral": "^2.0.6",
     "pdf-extractor": "^2.2.0",
     "puppeteer": "^19.4.1",
     "puppeteer-extra": "^3.3.4",
     "qs": "^6.11.0",
-    "tesseract.js": "^4.0.2"
+    "shapefile-to-geojson": "^1.0.1",
+    "tesseract.js": "^4.0.2",
+    "turf": "^3.0.14",
+    "zlib": "^1.0.5"
   }
 }
