@@ -3,7 +3,7 @@ const updateWithDataArrays = ({
   dataFromDB,
   mappings
 }) => {
-  const obj = { ...dataFromDB.data };
+  const obj = { ...structuredClone(dataFromDB.data) };
   const keysArr = arrayData[0];
   // Remove header array from returned census data
   const dataArr = arrayData.slice(1);
@@ -70,7 +70,8 @@ const updateGeoJSONWithDataArrays = ({
       obj[key] = {};
     }
 
-    obj[key][indicator] =  arr[keysArr.indexOf(valueIndex)]
+    const value = arr[keysArr.indexOf(valueIndex)]
+    obj[key][indicator] =  Number(value);
       // ? arr[keysArr.indexOf(valueIndex)]
       // : {
       //     ...obj[indicator][year],
@@ -94,7 +95,7 @@ const updateGeoJSONWithDataArrays = ({
 };
 
 const updatedWithObject = ({
-  dataFromDB,
+  dataFromDB: incomingData,
   obj: {
     data,
     mapping: {
@@ -106,7 +107,8 @@ const updatedWithObject = ({
     }
   }
 }) => {
-  // console.log(geo);
+  const dataFromDB = {...incomingData}
+  // console.log(data);
   if (!dataFromDB['data'][section]) {
     dataFromDB['data'][section] = {}
   }
@@ -128,7 +130,7 @@ const updatedWithObject = ({
     dataFromDB['data'][section][geotype][geo || category][indicator] = data;
   }
 
-  return dataFromDB;
+  return dataFromDB.data;
 };
 
 const updateByObjectKeyYearQuarter = ({

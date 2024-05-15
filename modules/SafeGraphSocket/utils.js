@@ -10,10 +10,10 @@ const csv = require('csv-parser');
 
 const ToMongoDB = async ({
   filePath,
-  sourceDirectory, 
+  sourceDirectory,
   // dbName, 
   // collectionName, 
-  filters, 
+  filters,
   updateQueryFields,
   // url,
   collection
@@ -21,11 +21,11 @@ const ToMongoDB = async ({
   // console.log(url)
   // console.log('Connected to', collectionName);
 
-  const stream = filePath.includes('.gz') 
+  const stream = filePath.includes('.gz')
     ? createReadStream(filePath)
       .pipe(createGunzip()) // decompress gzip file
       .pipe(csv())
-    :  createReadStream(filePath)
+    : createReadStream(filePath)
       .pipe(csv())
 
   let total = 0;
@@ -78,20 +78,20 @@ const ToMongoDB = async ({
     "open_hours"
   ];
 
-  const include = async (data, filters) => await new Promise (resolve => {
+  const include = async (data, filters) => await new Promise(resolve => {
     if (filters) {
       filters.forEach(filterObj => {
-        
+
         const booleans = [];
 
-        Object.entries(filterObj).forEach(([key,value]) => {
+        Object.entries(filterObj).forEach(([key, value]) => {
           if (data[key] === value) {
             booleans.push(true)
           } else {
             booleans.push(false)
           }
         });
-        
+
         if (!booleans.includes(false)) {
           resolve(true);
         };
@@ -101,73 +101,205 @@ const ToMongoDB = async ({
       resolve(true)
     }
   });
-
-
   await new Promise(resolve => {
     stream.on('data', async (data) => {
 
-        const obj = {};
-    
-        Object.entries(data).forEach(([rawKey, value]) => {
-          const key = rawKey.toLowerCase();
-          if (idFields.includes(key)) {
-            obj[key] = value;
-          } else if (arrayFieds.includes(key) || objFields.includes(key)) {
-            obj[key] = value ? JSON.parse(value) : null;
-          } else if (dateFields.includes(key)) {
-            obj[key] = new Date(value || '9999-12-31');
-          } else if (!isNaN(parseInt(value))) {
-            obj[key] = parseFloat(value);
-          } else {
-            obj[key] = value;
+      const obj = {};
+
+      Object.entries(data).forEach(([rawKey, value]) => {
+        const key = rawKey.toLowerCase();
+        if (idFields.includes(key)) {
+          obj[key] = value;
+        } else if (arrayFieds.includes(key) || objFields.includes(key)) {
+          obj[key] = value ? JSON.parse(value) : null;
+        } else if (dateFields.includes(key)) {
+          obj[key] = new Date(value || '9999-12-31');
+        } else if (!isNaN(parseInt(value))) {
+          obj[key] = parseFloat(value);
+        } else {
+          obj[key] = value;
+        }
+      })
+
+      if (await include(obj, filters)) {
+        if (obj.latitude && obj.longitude) {
+          obj.geometry = {
+            type: 'Point',
+            coordinates: [obj.longitude, obj.latitude]
           }
-        })
-
-        if (await include(obj,filters)) {  
-          if (obj.latitude && obj.longitude) {
-            obj.geometry = {
-              type: 'Point',
-              coordinates: [obj.longitude, obj.latitude]
-            }
-          };
-
-          // console.log(obj);
-
-          if (updateQueryFields) {
-            const updateQuery = {};
-
-            updateQueryFields.forEach(key =>
-              updateQuery[key] = obj[key]  
-            );
-            await collection.findOneAndUpdate(
-              updateQuery, 
-              {$set: {...obj, source_directory: sourceDirectory}}, 
-              {upsert: true}
-            )          
-          } else {
-            await collection.insertOne(obj);
-          }
-          
-
-          inserted++
         };
-        total++;
-    
-        if (total % 10000 === 0) {
-          console.log(`Of ${total}...${inserted} inserted`);
-        }    
+
+        // console.log(obj);
+
+        if (updateQueryFields) {
+          const updateQuery = {};
+
+          updateQueryFields.forEach(key =>
+            updateQuery[key] = obj[key]
+          );
+          await collection.findOneAndUpdate(
+            updateQuery,
+            { $set: { ...obj, source_directory: sourceDirectory } },
+            { upsert: true }
+          )
+        } else {
+          await collection.insertOne(obj);
+        }
+
+
+        inserted++
+      };
+      total++;
+
+      if (total % 10000 === 0) {
+        console.log(`Of ${total}...${inserted} inserted`);
+      }
       // }
-  
+
     });
     stream.on('end', async () => {
       console.log(`${total} total documents processed...${inserted} inserted.`);
       await unlink(filePath);
-      resolve(console.log('Deleted...', filePath));
+      setTimeout(() => resolve(console.log('Deleted...', filePath)), 1000);
     });
     stream.on('error', (err) => {
       throw err;
     });
   });
+
+
+  //   try {
+  //   for await (const data of stream) {
+  //     const obj = {};
+
+  //     Object.entries(data).forEach(([rawKey, value]) => {
+  //       const key = rawKey.toLowerCase();
+  //       if (idFields.includes(key)) {
+  //         obj[key] = value;
+  //       } else if (arrayFieds.includes(key) || objFields.includes(key)) {
+  //         obj[key] = value ? JSON.parse(value) : null;
+  //       } else if (dateFields.includes(key)) {
+  //         obj[key] = new Date(value || '9999-12-31');
+  //       } else if (!isNaN(parseInt(value))) {
+  //         obj[key] = parseFloat(value);
+  //       } else {
+  //         obj[key] = value;
+  //       }
+  //     })
+
+  //     if (await include(obj,filters)) {  
+  //       if (obj.latitude && obj.longitude) {
+  //         obj.geometry = {
+  //           type: 'Point',
+  //           coordinates: [obj.longitude, obj.latitude]
+  //         }
+  //       };
+
+  //       // console.log(obj);
+
+  //       if (updateQueryFields) {
+  //         const updateQuery = {};
+
+  //         updateQueryFields.forEach(key =>
+  //           updateQuery[key] = obj[key]  
+  //         );
+  //         await collection.findOneAndUpdate(
+  //           updateQuery, 
+  //           {$set: {...obj, source_directory: sourceDirectory}}, 
+  //           {upsert: true}
+  //         )          
+  //       } else {
+  //         await collection.insertOne(obj);
+  //       }
+
+
+  //       inserted++
+  //     };
+  //     total++;
+
+  //     if (total % 10000 === 0) {
+  //       console.log(`Of ${total}...${inserted} inserted`);
+  //     } 
+
+  //   }
+  // } catch (err) {
+  //   throw err
+  // } finally {
+  //   console.log(`${total} total documents processed...${inserted} inserted.`);
+  //   await unlink(filePath);
+  //   console.log('Deleted...', filePath)
+  // }
+
+  // await new Promise(resolve => {
+
+
+
+
+
+  //   stream.on('data', async (data) => {
+
+  //       const obj = {};
+
+  //       Object.entries(data).forEach(([rawKey, value]) => {
+  //         const key = rawKey.toLowerCase();
+  //         if (idFields.includes(key)) {
+  //           obj[key] = value;
+  //         } else if (arrayFieds.includes(key) || objFields.includes(key)) {
+  //           obj[key] = value ? JSON.parse(value) : null;
+  //         } else if (dateFields.includes(key)) {
+  //           obj[key] = new Date(value || '9999-12-31');
+  //         } else if (!isNaN(parseInt(value))) {
+  //           obj[key] = parseFloat(value);
+  //         } else {
+  //           obj[key] = value;
+  //         }
+  //       })
+
+  //       if (await include(obj,filters)) {  
+  //         if (obj.latitude && obj.longitude) {
+  //           obj.geometry = {
+  //             type: 'Point',
+  //             coordinates: [obj.longitude, obj.latitude]
+  //           }
+  //         };
+
+  //         // console.log(obj);
+
+  //         if (updateQueryFields) {
+  //           const updateQuery = {};
+
+  //           updateQueryFields.forEach(key =>
+  //             updateQuery[key] = obj[key]  
+  //           );
+  //           await collection.findOneAndUpdate(
+  //             updateQuery, 
+  //             {$set: {...obj, source_directory: sourceDirectory}}, 
+  //             {upsert: true}
+  //           )          
+  //         } else {
+  //           await collection.insertOne(obj);
+  //         }
+
+
+  //         inserted++
+  //       };
+  //       total++;
+
+  //       if (total % 10000 === 0) {
+  //         console.log(`Of ${total}...${inserted} inserted`);
+  //       }    
+  //     // }
+
+  //   });
+  //   stream.on('end', async () => {
+  //     console.log(`${total} total documents processed...${inserted} inserted.`);
+  //     await unlink(filePath);
+  //     resolve(console.log('Deleted...', filePath));
+  //   });
+  //   stream.on('error', (err) => {
+  //     throw err;
+  //   });
+  // });
 
 };
 
@@ -211,7 +343,7 @@ const ToMongoDB = async ({
 //   return result.data
 // };
 
-const deleteRecords = async ({query, dbName, collectionName}) => {
+const deleteRecords = async ({ query, dbName, collectionName }) => {
   const url = 'mongodb://127.0.0.1:27017';
   const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
   const db = client.db(dbName);
@@ -226,8 +358,15 @@ const deleteRecords = async ({query, dbName, collectionName}) => {
 const getFileLinks = async ({
   apiURL, params, fileType
 }) => {
-  // const { access_token } = await getToken()
-  // '2023/1/1/SAFEGRAPH/P'
+
+  if (params?.partition_key_after && !params?.partition_key_before) {
+    const date = new Date(params.partition_key_after);
+    // Add 3 months to the date
+
+    date.setMonth(date.getMonth() + 3);
+    params.partition_key_before = date.toISOString().split('T')[0]
+  }
+
   const API_KEY = process.env.SAFEGRAPH_API_KEY
   var config = {
     method: 'get',
@@ -245,21 +384,21 @@ const getFileLinks = async ({
   };
 
 
-  const {data} = await axios(config)
+  const { data } = await axios(config)
     // .then(({ data: download_links }) => download_links)
     .catch((error) => console.log(error));
 
   // console.log(fileLinks);
-  const fileLinks = data?.download_links.map(({link}) => link)
+  const fileLinks = data?.download_links.map(({ link }) => link)
 
   return fileLinks
-    // ? fileLinks
-    //   .filter(({name}) => name.includes('.csv.gz'))
-    //   .map(({ url }) => url) 
-    // : []
+  // ? fileLinks
+  //   .filter(({name}) => name.includes('.csv.gz'))
+  //   .map(({ url }) => url) 
+  // : []
 };
 
-const downloadFiles = async ({linkArray, tempDir, fileType}) => {
+const downloadFiles = async ({ linkArray, tempDir, fileType }) => {
   // const { access_token } = await getToken()
   // const baseURL = 'https://marketplace.deweydata.io'
   let count = 0;
@@ -299,12 +438,12 @@ const downloadFiles = async ({linkArray, tempDir, fileType}) => {
 
     console.log('Download:', `${link}`);
 
-    const download =  async () => {
+    const download = async () => {
       try {
         const response = await axios(config);
         console.log('Download beginning...');
         response.data.pipe(file);
-    
+
         return new Promise((resolve, reject) => {
           file.on("finish", () => {
             console.log('Download complete.');
@@ -324,7 +463,7 @@ const downloadFiles = async ({linkArray, tempDir, fileType}) => {
         }
       }
     }
-    
+
     await download();
 
     // const download = async () => await new Promise((resolve, reject) => axios(config)
@@ -358,66 +497,70 @@ const downloadFiles = async ({linkArray, tempDir, fileType}) => {
 };
 
 const safegraphDataToDB = async (config) => {
-    const {
-      dbURI,
-      dbName,
-      tempDir,
-      fileType,
-      apiURL,
-      params,
-      collectionName
-    } = config;
-    const fileLinks = await getFileLinks({apiURL, params, fileType});
-  
-    console.log(fileLinks);
-    console.log('Beginning download of:', fileLinks);
-  
-    const downloadResult = await downloadFiles(({
-      linkArray: fileLinks,
-      tempDir: tempDir,
-      fileType
-    }));
-  
-    console.log(downloadResult);
-  
-    const listOfFiles = await readdir(tempDir);
+  const {
+    dbURI,
+    dbName,
+    tempDir,
+    fileType,
+    apiURL,
+    params,
+    collectionName
+  } = config;
+  const fileLinks = await getFileLinks({ apiURL, params, fileType });
 
-    console.log(listOfFiles);
-    
-    const client = new MongoClient(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
-    const db = client.db(dbName);
-    const collection = db.collection(collectionName);
-  
-    try {
-      for await (fileName of listOfFiles) {
-        if (fileName.includes(fileType)) {
-          console.log('Processing to DB: ', fileName); 
-          await ToMongoDB({
-            filePath: `${tempDir}${fileName}`,
-            collection,
-            ...config
-          })    
-        }
-      };    
-    } finally {
-      console.log('Done!')
-      await client.close()
-    }
-  
+  console.log(fileLinks);
+  console.log('Beginning download of:', fileLinks);
+
+  const downloadResult = await downloadFiles(({
+    linkArray: fileLinks,
+    tempDir: tempDir,
+    fileType
+  }));
+
+  console.log(downloadResult);
+
+  const listOfFiles = await readdir(tempDir);
+
+  console.log(listOfFiles);
+
+  const client = new MongoClient(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
+  const db = client.db(dbName);
+  const collection = db.collection(collectionName);
+
+  try {
+    for await (fileName of listOfFiles) {
+      if (fileName.includes(fileType)) {
+        console.log('Processing to DB: ', fileName);
+        await ToMongoDB({
+          filePath: `${tempDir}${fileName}`,
+          collection,
+          ...config
+        })
+      }
+    };
+  } finally {
+    console.log('Done!')
+    await client.close()
+  }
+
 
 };
 
 const updateDataDashboard = async config => {
   const {
-    aggregationPipeline,
-    dbName,
-    collectionName,
-    stateKey,
-    topCities,
+    dashboardDataUpdate : {
+      aggregationPipeline,
+      dbName,
+      collectionName,
+      stateKey,
+      topCities
+    },
     rawDataURI
   } = config;
 
-    const url = rawDataURI;
+  // console.log(config);
+
+  const url = rawDataURI;
 
 
   const client = await MongoClient.connect(
@@ -433,7 +576,7 @@ const updateDataDashboard = async config => {
   const result = {};
 
   array.forEach(({
-    _id : {
+    _id: {
       month,
       year,
       naics,
@@ -450,7 +593,7 @@ const updateDataDashboard = async config => {
     if (total_customers && customers_by_city && !topCities) {
       let totalTourists = 0;
       customers_by_city.forEach(obj => {
-        Object.entries(obj).forEach(([key,v])=> {
+        Object.entries(obj).forEach(([key, v]) => {
           const state = key.split(',')[1];
           if (state.trim() !== stateKey) {
             totalTourists += v
@@ -458,7 +601,7 @@ const updateDataDashboard = async config => {
         })
       });
       if (totalTourists > 0) {
-        value = (totalTourists/total_customers) * 100
+        value = (totalTourists / total_customers) * 100
       }
     } else if (total_spending || total_transactions) {
       value = total_spending || total_transactions;
@@ -467,7 +610,7 @@ const updateDataDashboard = async config => {
         result['top_cities'] = {}
       }
       customers_by_city.forEach(obj => {
-        Object.entries(obj).forEach(([key,v])=> {
+        Object.entries(obj).forEach(([key, v]) => {
           const state = key.split(',')[1];
           if (state.trim() !== stateKey) {
             if (!result['top_cities'][key]) {
@@ -477,24 +620,24 @@ const updateDataDashboard = async config => {
             }
           }
         })
-      });      
+      });
     }
 
     if (value) {
-      if (!result[naics4 || naics]) {result[naics4 || naics] = {}}
+      if (!result[naics4 || naics]) { result[naics4 || naics] = {} }
       result[naics4 || naics][`${year}-${month}-1`] = value
     }
   });
 
   if (topCities && result['top_cities']) {
     const cities = Object.entries(result['top_cities'])
-      .sort((a,b) => b[1] - a[1])
-      .map(([k,v]) =>( {[k]: v}))
-      .slice(0,10);
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => ({ [k]: v }))
+      .slice(0, 10);
 
     result['top_cities'] = cities
 
-    
+
   }
 
 

@@ -21,12 +21,12 @@ async function findJsonFiles(dir, callback) {
     }
 }
 
-async function processJsonFile(filePath, collection) {
+async function processJsonFile(filePath, collection, scheduleDate) {
     try {
         const data = await fs.readFile(filePath, 'utf8');
         const jsonData = JSON.parse(data).map(obj =>( {
           ...obj,
-          scheduleDate: new Date(obj.scheduleDate)
+          scheduleDate: new Date(obj.scheduleDate || scheduleDate)
         }));
         // Insert into MongoDB collection
         await collection.insertMany(jsonData);
@@ -36,7 +36,7 @@ async function processJsonFile(filePath, collection) {
     }
 }
 
-async function main(rootFilePath, collectionName) {
+async function main(rootFilePath, collectionName, scheduleDate) {
     const uri = process.env.MONGODB_URI; // Replace with your MongoDB connection string
     const client = new MongoClient(uri);
 
@@ -48,7 +48,7 @@ async function main(rootFilePath, collectionName) {
 
         // Replace 'yourRootDirectoryPath' with your starting directory
         await findJsonFiles(rootFilePath, async (filePath) => {
-            await processJsonFile(filePath, collection);
+            await processJsonFile(filePath, collection, scheduleDate);
         });
     } catch (err) {
         console.error('Database error:', err);
@@ -59,5 +59,6 @@ async function main(rootFilePath, collectionName) {
 
 main(
   './configs/schedule', //FROM HERE
-  'sockets' //TO HERE
+  'sockets', //TO HERE,
+  '2024-05-02' //DEFAULT SCHEDULE DATE IF NOT SET BY CONFIG
 );

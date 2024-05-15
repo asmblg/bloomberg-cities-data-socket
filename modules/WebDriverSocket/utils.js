@@ -11,7 +11,7 @@ const Tesseract = require('tesseract.js');
 
 const Navigate = async ({ navigationArray }) => {
   const browser = await puppeteer.launch({
-    headless: true
+    headless: 'new'
   });
   const page = await browser.newPage();
 

@@ -38,6 +38,8 @@ const OneDriveSocket = async ({
     accessToken: msGraphToken
   });
 
+  // console.log(filesInDirectory);
+
   const files = filesInDirectory
     .filter(({ name }) => {
       if (fileName) {
@@ -65,8 +67,6 @@ const OneDriveSocket = async ({
   if (files?.[0]) {
 
     let result = {};
-
-
 
     for await (const file of files){
 
@@ -107,16 +107,17 @@ const OneDriveSocket = async ({
           accessToken: msGraphToken
         });
 
-        // console.log(worksheet);
+        console.log(worksheet.length);
 
 
         result = processData({mappings, worksheet});
+        // console.log('processed:', result);
       }
 
     };
 
     result = runCalculations({mappings, result})
-
+    // console.log('calculated:', result);
     return result;
 
   }

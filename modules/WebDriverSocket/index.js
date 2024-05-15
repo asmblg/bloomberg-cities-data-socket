@@ -62,7 +62,7 @@ const WebDriverSocket = async (config) => {
       } = config;
 
       await parsePDFviaLink({
-        link: `https://www.us.jll.com/content/dam/jll-com/documents/pdf/research/americas/us/${quarter}-${year}-${subtype}-insights/jll-us-${subtype}-insight-${quarter}-${year}-${city}.pdf`, 
+        link: `https://www.us.jll.com/content/dam/jll-com/documents/pdf/research/americas/us/${quarter}-${year}-${subtype}-insights/jll-us-${subtype}-insight-${quarter}-${year}-${city}.pdf`.toLowerCase(), 
         project, 
         tablePage,
         pageRange

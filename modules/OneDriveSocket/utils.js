@@ -181,18 +181,23 @@ const processData = ({mappings, worksheet}) => {
         indicator,
         quarter
       }} = mapping;
+
+    // console.log(mapping);
     
     let startRowIndex = null;
     let endRowIndex = null;
 
-    const headerRow = worksheet[0].map(cell => cell.trim());
+    const headerRow = worksheet[0]
+    .map(cell => `${cell}`
+    // .toLocaleLowerCase()
+    .trim());
+
     const labelIndex = labelField ? headerRow.indexOf(labelField) > -1 ? headerRow.indexOf(labelField) : labelColumn : null;
     const valueIndex = headerRow.indexOf(valueField) > -1 ? headerRow.indexOf(valueField) : valueColumn;
     const groupIndex = headerRow.indexOf(groupField) > -1 ? headerRow.indexOf(groupField) : groupColumn;
     const countUniqueIndex = headerRow.indexOf(countUniqueField) > -1 ? headerRow.indexOf(countUniqueField) : countUniqueColumn;
     const objectForCheckingUniqueCount = {};
 
-    // console.log(labelIndex, groupIndex, valueIndex)
     if (rowSearch && labelIndex) {
       worksheet.forEach((row, i) => {
         row.forEach(cell => { 
@@ -214,6 +219,8 @@ const processData = ({mappings, worksheet}) => {
       ? worksheet.slice(startRowIndex, endRowIndex)
       : worksheet;
     
+    // console.log(slicedRows)
+
     const filterIndex =  filter?.field && headerRow.indexOf(filter?.field) > -1 
       ? headerRow.indexOf(filter?.field) 
       : filter?.column;
@@ -241,6 +248,7 @@ const processData = ({mappings, worksheet}) => {
           : true 
       : true)
     .forEach(row => {
+      // console.log(row);
       const countUniqueValue = row[countUniqueIndex];
 
       const label = labelIndex || labelIndex === 0

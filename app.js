@@ -1,10 +1,9 @@
 require('dotenv').config();
-const util = require('util');
 const { MongoClient } = require('mongodb');
+const _ = require('lodash');
 const {
   updateWithDataArrays,
   updatedWithObject,
-  // updateBySubtypeGeoTypeGeoWithValue,
   updateByObjectKeyYearQuarter,
   updateByObjectKeysYearQuarter,
   updateByObjectKeys,
@@ -27,7 +26,6 @@ const { mergeObjects } = require('./globalUtils/mergeObjects')
 
 const { 
   getDataSocketConfig, 
-  // getDbConnection 
 } = require('./globalUtils/API');
 
 const run = async () => {
@@ -46,47 +44,141 @@ const run = async () => {
     const socketCollection = db.collection('sockets');
 
     const socketQuery = {
-      scheduleDate: { $lte: new Date('2024-1-1')},
+      scheduleDate: { $lte: new Date()},
       processedDate: { $exists: false},
-      type: "OneDrive",
-      fileType: "XLSX",
-      project: "Phoenix"
+      // type: "SafeGraph",
+      // rawDataUpdateConfig: {$exists: true}
+      // fileType: "XLSX",
+      // project: "Phoenix"
     }
+
 
     // Get config array from DB
     const dataSocketConfigs = await getDataSocketConfig(socketCollection, socketQuery);
-    console.log(dataSocketConfigs);
+    console.log('Number of Sockets to Run:', dataSocketConfigs.length);
+
+    // const dataSocketConfigs = [
+    //   {
+    //     "project": "Tampa",
+    //     "type": "CensusAPI",
+    //     "scheduleDate": {
+    //       "$date": "2024-01-15T00:00:00.000Z"
+    //     },
+    //     "url": "https://api.census.gov/data/2022/acs/acs1/subject",
+    //     "query": {
+    //       "get": "NAME,S0801_C01_013E",
+    //       "for": "place:71000",
+    //       "in": "state:12"
+    //     },
+    //     "source": "ACS 1-year 2022",
+    //     "description": "Remote Workers in City of Tampa from 2022 Subject Table",
+    //     "tableDescription": "Subject Tables",
+    //     "mappings": [
+    //       {
+    //         "destination": {
+    //           "geo": "city",
+    //           "category": "jobs",
+    //           "year": "2022",
+    //           "indicator": "remote_workers"
+    //         },
+    //         "origin": {
+    //           "valueIndex": "S0801_C01_013E"
+    //         }
+    //       }
+    //     ]
+    //   },
+    //   {
+    //     "project": "Phoenix",
+    //     "type": "CensusAPI",
+    //     "scheduleDate": {
+    //       "$date": "2024-01-15T00:00:00.000Z"
+    //     },
+    //     "url": "https://api.census.gov/data/2022/acs/acs1/subject",
+    //     "query": {
+    //       "get": "NAME,S0801_C01_013E",
+    //       "for": "place:55000",
+    //       "in": "state:04"
+    //     },
+    //     "source": "ACS 1-year 2022",
+    //     "description": "Remote Workers in City of Phoenix from 2022 Subject Table",
+    //     "tableDescription": "Subject Tables",
+    //     "mappings": [
+    //       {
+    //         "destination": {
+    //           "geo": "city",
+    //           "category": "jobs",
+    //           "year": "2022",
+    //           "indicator": "remote_workers"
+    //         },
+    //         "origin": {
+    //           "valueIndex": "S0801_C01_013E"
+    //         }
+    //       }
+    //     ]
+    //   },
+    //   {
+    //     "project": "Baltimore",
+    //     "type": "CensusAPI",
+    //     "scheduleDate": {
+    //       "$date": "2024-01-15T00:00:00.000Z"
+    //     },
+    //     "url": "https://api.census.gov/data/2022/acs/acs1/subject",
+    //     "query": {
+    //       "get": "NAME,S0801_C01_013E",
+    //       "for": "place:04000",
+    //       "in": "state:24"
+    //     },
+    //     "source": "ACS 1-year 2022",
+    //     "description": "Remote Workers in City of Baltimore from 2022 Subject Table",
+    //     "tableDescription": "Subject Tables",
+    //     "mappings": [
+    //       {
+    //         "destination": {
+    //           "geo": "city",
+    //           "category": "jobs",
+    //           "year": "2022",
+    //           "indicator": "remote_workers"
+    //         },
+    //         "origin": {
+    //           "valueIndex": "S0801_C01_013E"
+    //         }
+    //       }
+    //     ]
+    //   }
+    // ]
+
 
     // Execute data socket by data socket type
     for await (config of dataSocketConfigs) {
+
+      let updatedData = null;
+
+      const dataFromDB = await dataCollection.findOne({
+        project: config.project
+      });
+
       try {
-        let success = false;
         switch (config.type) {
           // FOR CENSUS
           case 'Census API':
           case 'CensusAPI': {
             const arrayData = await APISocket(config);
-            // console.log(arrayData)
+
             if (config.mapToGeo) {
-              // console.log(arrayData);
 
               const geoJSON = await geoCollection.findOne({
                 project: config.project,
                 geoType: config.geoType
               });
 
-              // Map arrayData into geoJSON
-
-              const updatedData = updateGeoJSONWithDataArrays({
+              const updatedGeoFeatures = updateGeoJSONWithDataArrays({
                 arrayData,
                 geoJSON,
                 joinField: config.joinField,
                 mappings: config.mappings
-              })
-              // console.log('Done!\n', util.inspect(updatedData[0], false, null, true));
+              });
 
-              // Update geoJSON on DB
-              if (updatedData[0]) {
+              if (updatedGeoFeatures[0]) {
                 await geoCollection.findOneAndUpdate(
                   {
                     project: config.project,
@@ -94,79 +186,42 @@ const run = async () => {
                   },
                   {
                     $set: {
-                      features: updatedData,
+                      features: updatedGeoFeatures,
                       updatedOn: new Date()
                     }
                   }
                 );
               }
 
-              console.log('Geos Updated with', config.description)
-
-
-
             } else {
-              const dataFromDB = await dataCollection.findOne({
-                project: config.project
-              });
 
-              const updatedData = await updateWithDataArrays({
+              // console.log(arrayData);
+
+              updatedData = await updateWithDataArrays({
                 arrayData,
                 dataFromDB,
                 mappings: config.mappings
               });
 
-              // console.log(updatedData);
-
-              await dataCollection.findOneAndUpdate(
-                { project: config.project },
-                {
-                  $set: {
-                    data: updatedData,
-                    updatedOn: new Date()
-                  }
-                }
-              );
             }
-
-
-
-            // console.log(`Data updated on DB: ${config.description}`)
 
             break;
           }
           // FOR BLS
           case 'BLS API': {
             const objectArray = await APISocket(config);
+            // console.log(objectArray)
 
-            // console.log(util.inspect(objectArray?.filter(({mapping}) => mapping.geo === 'tampa' || mapping.geo === 'phoenix'),false,null,true ))
-
-            for await (obj of objectArray) {
-              const dataFromDB = await dataCollection.findOne({
-                project: config.project
-              });
-
-              const updatedData = await updatedWithObject({
-                dataFromDB,
+            objectArray.forEach(obj =>
+              updatedData = updatedWithObject({
+                dataFromDB:  { 
+                  data: updatedData 
+                  ? updatedData 
+                  : structuredClone(dataFromDB.data)
+                }, 
                 obj
-              });
-
-
-              await dataCollection.findOneAndUpdate(
-                { project: config.project },
-                {
-                  $set: {
-                    data: updatedData.data,
-                    updatedOn: new Date()
-                  }
-                }
-              );
-
-              console.log(`Data updated on DB at ${JSON.stringify(obj.mapping)}`)
-
-            };
-
-            console.log(`All data updated on DB for ${config.project}.`)
+              })
+            )
 
             break;
           }
@@ -174,41 +229,19 @@ const run = async () => {
           case 'WebDriver': {
             const obj = await WebDriverSocket(config);
 
-            console.log(util.inspect(obj, false, null, true));
-
-            const dataFromDB = await dataCollection.findOne({
-              project: config.project
-            });
-
-            const updatedData = config.source === 'JLL'
+            updatedData = config.source === 'JLL'
               ? updateByObjectKeysYearQuarter({
                 mapping: config.mapping,
                 obj,
-                dataFromDB: dataFromDB.data
+                dataFromDB: structuredClone(dataFromDB.data)
               })
               : config.source === 'Data Axel'
                 ? updateByObjectKeyYearQuarter({
                   mapping: config.mapping,
                   obj,
-                  dataFromDB: dataFromDB.data
+                  dataFromDB: structuredClone(dataFromDB.data)
                 })
                 : null;
-
-            // console.log('Done!\n', util.inspect(updatedData.realestate.industrial, false, null, true));
-
-            if (updatedData) {
-              await dataCollection.findOneAndUpdate(
-                { project: config.project },
-                {
-                  $set: {
-                    data: updatedData,
-                    updatedOn: new Date()
-                  }
-                }
-              );
-            };
-
-            console.log(`Data updated on DB at ${JSON.stringify(config.mapping)}`)
 
             break;
           }
@@ -216,30 +249,11 @@ const run = async () => {
           case 'GoogleSheet': {
             const obj = await GoogleSheetSocket.get(config);
 
-            const dataFromDB = await dataCollection.findOne({
-              project: config.project
-            });
-
-            const updatedData = updateByObjectKeys({
+            updatedData = updateByObjectKeys({
               mapping: config.mapping,
               obj,
-              dataFromDB: dataFromDB.data
+              dataFromDB: structuredClone(dataFromDB.data)
             });
-
-            // console.log('Done!\n', util.inspect(updatedData.smallbusiness, false, null, true));
-
-
-            if (updatedData) {
-              await dataCollection.findOneAndUpdate(
-                { project: config.project },
-                {
-                  $set: {
-                    data: updatedData,
-                    updatedOn: new Date()
-                  }
-                }
-              );
-            };
 
             break;
           }
@@ -250,36 +264,16 @@ const run = async () => {
               ...config
             });
 
-            // console.log('Done!\n', util.inspect(data, false, null, true));
-
-
             if (data) {
-              const dataFromDB = await dataCollection.findOne({
-                project: config.project
-              });
 
-              // IMPLEMENT MERGE OBJECTS HERE
-              const updatedData = await updatedWithObject({
-                dataFromDB,
+              updatedData = await updatedWithObject({
+                dataFromDB: structuredClone(dataFromDB),
                 obj: {
                   data,
                   mapping: config.dashboardDataUpdate.mapping
                 }
               });
 
-              // console.log(util.inspect(updatedData.data.consumers.city.naics3,false,null,true ))
-
-              await dataCollection.findOneAndUpdate(
-                { project: config.project },
-                {
-                  $set: {
-                    data: updatedData.data,
-                    updatedOn: new Date()
-                  }
-                }
-              );
-
-              console.log(`Data updated on DB at ${JSON.stringify(config.dashboardDataUpdate.mapping)}`)
             };
 
             break;
@@ -316,32 +310,18 @@ const run = async () => {
                 config.dashboardDataUpdate.aggregationPipeline = aggregationPipeline.slice(1);
 
                 if (data) {
-                  const dataFromDB = await dataCollection.findOne({
-                    project: config.project
-                  });
 
                   config.dashboardDataUpdate.mapping.geo = name;
 
-                  // IMPLEMENT MERGE OBJECTS IN THE MODULE BELOW
-                  const updatedData = await updatedWithObject({
-                    dataFromDB,
+                  updatedData = await updatedWithObject({
+                    dataFromDB: updatedData
+                      ? {data: updatedData}
+                      : structuredClone(dataFromDB),
                     obj: {
                       data,
                       mapping: config.dashboardDataUpdate.mapping
                     }
                   });
-
-                  await dataCollection.findOneAndUpdate(
-                    { project: config.project },
-                    {
-                      $set: {
-                        data: updatedData.data,
-                        updatedOn: new Date()
-                      }
-                    }
-                  );
-
-                  console.log(`Data updated on DB at ${JSON.stringify(config.dashboardDataUpdate.mapping)}`)
 
                 }
               }
@@ -352,8 +332,8 @@ const run = async () => {
           case 'OneDrive': {
             config.clientID = process.env.MS_CLIENT_ID;
             config.clientSecret = process.env.MS_CLIENT_SECRET;
+
             const data = await OneDriveSocket(config);
-            // console.log(util.inspect(data, false, null, true));
 
             const { mappings } = config;
 
@@ -366,6 +346,7 @@ const run = async () => {
                 });
 
                 const features = geoJSON?.features;
+
                 const updatedFeatures = features?.map(feature => {
                   const joinKey = feature.properties[config.joinField];
                   mappings.forEach(({ destination: { indicator } }) => {
@@ -391,10 +372,6 @@ const run = async () => {
                 }
 
               } else {
-                let result = null;
-                const { data: dbData } = await dataCollection.findOne({
-                  project: config.project
-                });
 
                 mappings.forEach(({
                   destination: {
@@ -405,7 +382,6 @@ const run = async () => {
                     indicator
                   }
                 }) => {
-                  const target = dbData;
 
                   let source = {
                     [category]: {}
@@ -450,27 +426,21 @@ const run = async () => {
                     };
                   }
 
-                  result = mergeObjects(result ? result : target, source)
+                  updatedData = mergeObjects(
+                    updatedData 
+                      ? updatedData 
+                      : structuredClone(dataFromDB.data), 
+                    source
+                  )
                 })
-
-                if (result) {
-
-                  await dataCollection.findOneAndUpdate(
-                    {project: config.project }, 
-                    {
-                      $set: {
-                        data: result,
-                        updatedOn: new Date()
-                      }
-                    }
-                  );                
-                }
               }
-
-              console.log(`Data updated on DB at ${mappings.map(({destination}) => `${config.project}: ${JSON.stringify(destination)}`)}`)
-
             }
 
+            break;
+          }
+
+          case 'Direct': {
+            console.log(config.type, 'Direct Update', config.update);
             break;
           }
 
@@ -480,14 +450,53 @@ const run = async () => {
           }
         }
 
-        // HANDLE SOCKET CONFIG
-        if (success) {
-          
+        if (
+          (updatedData && !_.isEqual(updatedData, dataFromDB.data)) || 
+          (config.type === 'Direct' && config.update)
+        ) {
+          console.log('NEW DATA');
+          const updateObject = config.type === 'Direct' 
+            ? {
+                ...config.update,
+                updatedOn: new Date()
+              }
+            : {
+              data: updatedData,
+              updatedOn: new Date()
+              }
 
+          await dataCollection.findOneAndUpdate(
+            { project: config.project }, 
+            { $set: updateObject }
+          )
+          await socketCollection.findOneAndUpdate(
+            {_id: config._id},
+            { $set: {processedDate: new Date()}}
+          )
+
+          // HANDLE SOCKET CONFIG UPDATE
+        } else if (updatedData) {
+          console.log(config._id, 'NO NEW DATA')
+          // HANDLE NO NEW DATA
+        } else {
+          console.log(config._id, config?.mapToGeo ? 'MAPPPED TO GEO' : 'NO DATA')
+          // HANDLE NO DATA
+          if (config?.mapToGeo) {
+            await socketCollection.findOneAndUpdate(
+              {_id: config._id},
+              { $set: {processedDate: new Date()}}
+            )
+          }
         }
-      } catch (err) {
-        console.log(err);
 
+      } catch (err) {
+        const errorObject = {
+          socketID: config?._id,
+          error: err,
+          date: new Date()
+        };
+        // INSERT IN ERROR COLLECTION  
+        console.log(config._id, errorObject);
       }
     }
 
@@ -506,19 +515,3 @@ run()
     console.log('\nExiting...\n');
     process.exit(1);
   });
-
-
-// BACKUP FOR JLL
-// case 'XLSX' : {
-//   await XLSXSocket({
-//     project,
-//     sheetName,
-//     mappings,
-//     fileName,
-//     directoryID,
-//     clientID: process.env.MS_CLIENT_ID,
-//     clientSecret: process.env.MS_CLIENT_SECRET,
-//     db: db
-//   });
-//   break;
-// }

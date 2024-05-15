@@ -101,12 +101,13 @@ Each configuration object contains parameters determining when a socket module w
 
 ### Global Parameters
 All configuration objects will need these parameters with valid values.
-- **scheduleDate**: Date and time for scheduled data retrieval in ISO 8601 format (`YYYY-MM-DDTHH:MM:SSZ`).
-- **type**: Type of data socket (`BLS API`, `Census API`,`OneDrive`, `WebDriver`, `GoogleSheet`,  `SafeGraph`, or `SafeGraph Subareas`).
+- **type** (required): Type of data socket (`BLS API`, `Census API`,`OneDrive`, `WebDriver`, `GoogleSheet`,  `SafeGraph`, or `SafeGraph Subareas`).
+- **scheduleDate** (required for automated deployment): Date and time for scheduled data retrieval in ISO 8601 format (`YYYY-MM-DDTHH:MM:SSZ`).
+
 
 ### (Almost) Global Parameters
-- **project**: Name or identifier of the project (`phoenix`, `baltimore`, `tampa`).
-- **description**: General description of the data being retrieved.
+- **project** (required in most casess): Name or identifier of the project (`phoenix`, `baltimore`, `tampa`).  This must consistent with project key for the database document where the retrieved data will be added.
+- **description** (optional): General description of the data being retrieved.
 - **mapping**: Object defining how the retrieved data is inserted into the data collection serving the frontend dashboard.  This is used to configure: [Bureau of Labor Statistics (BLS) API Parmeters](#bureau-of-labor-statistics-bls-api-parmeters), [DataAxel WebDriver Parameters](#dataaxel-webdriver-parameters).
   - **geotype**: Geographical type of the data (e.g., `city`).
   - **geo**: key for specific geographic area (e.g., `atlanta`)
@@ -115,19 +116,21 @@ All configuration objects will need these parameters with valid values.
   - **category** : Key for high-level category (e.g., `realestate`).
   - **section**: Key for section of a category (e.g., `industrial`).
 - **mappings**: Array of mapping objects to define how data in the file is extracted, processed and inserted into data collection serving the frontend dashboard.  This is used to configure: [XLSX File from OneDrive Parameters](#xlsx-file-from-onedrive-parameters), [US Census Bureau API Parameters](#us-census-bureau-api-parameters). 
-  - **destination**: Specifies the destination mapping for the data.
-    - **geo**: Geographical identifier for the data destination.
-    - **category**: Data category for the destination (e.g., `jobs`).
-    - **year**: Relevant year for the data (e.g., `2022`).
-    - **indicator**: Specific indicator for the data (e.g., `employment_by_industry`).
-  - **origin**: Specifies the origin mapping for the data in the file.
-    - **labelField**: Field name to be used as a label.
-    - **labelFormatter**: Object specifying how to format the label.
+  - **destination**: Object which ppecifies the destination mapping for the data.
+    - **category** (required): Key for high-level category (e.g., `jobs`).
+    - **geotype**: Geographical type of the data (e.g., `city`).
+    - **geo** (optional): key for specific geographic area (e.g., `atlanta`).
+    - **year** (optional): Key for year of data (e.g., `2024`).
+    - **quarter**: Key for quarter of data. (e.g., `Q1`).
+    - **indicator** (optional): Specific indicator for the data (e.g., `employment_by_industry`).
+  - **origin**: Object which opecifies the origin mapping for the data in the retrieved file.
+    - **valueField** (required): Field name representing the value to be used.
+    - **labelField** (optional): Field name to be used as a label.
+    - **labelFormatter** (optional): Object specifying how to format the label.
       - **method**: Formatting method (e.g., `slice`).
       - **argument**: Arguments for the formatter method (e.g., `[0,2]`).
-    - **valueField**: Field name representing the value to be used.
-    - **groupField**: Field name to be used for grouping data.
-    - **filter**: Criteria for filtering data.
+    - **groupField** (optional): Field name to be used for grouping data.
+    - **filter** (optional): Criteria for filtering data.
       - **field**: Field name to apply the filter on.
       - **value**: Value to filter by (e.g., `Baltimore City County, MD`).
 
