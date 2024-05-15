@@ -506,45 +506,44 @@ const safegraphDataToDB = async (config) => {
     params,
     collectionName
   } = config;
-  const fileLinks = await getFileLinks({ apiURL, params, fileType });
-
-  console.log(fileLinks);
-  console.log('Beginning download of:', fileLinks);
-
-  const downloadResult = await downloadFiles(({
-    linkArray: fileLinks,
-    tempDir: tempDir,
-    fileType
-  }));
-
-  console.log(downloadResult);
-
-  const listOfFiles = await readdir(tempDir);
-
-  console.log(listOfFiles);
 
   const client = new MongoClient(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
-  const db = client.db(dbName);
-  const collection = db.collection(collectionName);
-
   try {
-    for await (fileName of listOfFiles) {
+    await client.connect();
+    const db = client.db(dbName);
+    const collection = db.collection(collectionName);
+
+    const fileLinks = await getFileLinks({ apiURL, params, fileType });
+    console.log('Beginning download of:', fileLinks);
+
+    const downloadResult = await downloadFiles({
+      linkArray: fileLinks,
+      tempDir: tempDir,
+      fileType
+    });
+    console.log(downloadResult);
+
+    const listOfFiles = await readdir(tempDir);
+    console.log(listOfFiles);
+
+    for await (const fileName of listOfFiles) {
       if (fileName.includes(fileType)) {
         console.log('Processing to DB: ', fileName);
         await ToMongoDB({
           filePath: `${tempDir}${fileName}`,
           collection,
           ...config
-        })
+        });
       }
-    };
+    }
+  } catch (error) {
+    console.error('An error occurred:', error);
   } finally {
-    console.log('Done!')
-    await client.close()
+    console.log('Done processing files.');
+    await client.close();
   }
-
-
 };
+
 
 const updateDataDashboard = async config => {
   const {
