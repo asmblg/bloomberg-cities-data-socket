@@ -568,8 +568,10 @@ const updateDataDashboard = async config => {
   );
   console.log('Connected to MongoDB', url)
   const coll = client.db(dbName).collection(collectionName);
+  console.log(aggregationPipeline)
   const cursor = coll.aggregate(aggregationPipeline);
   const array = await cursor.toArray();
+  
 
   await client.close();
 
