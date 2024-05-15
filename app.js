@@ -20,12 +20,12 @@ const {
 const { mergeObjects } = require('./globalUtils/mergeObjects')
 
 // const dataSocketConfigs = require('./configs/scheduled/JLL-XLSX.json')
-  // .filter((item, i) =>
-  //   i === 5
-  // );
+// .filter((item, i) =>
+//   i === 5
+// );
 
-const { 
-  getDataSocketConfig, 
+const {
+  getDataSocketConfig,
 } = require('./globalUtils/API');
 
 const run = async () => {
@@ -44,8 +44,8 @@ const run = async () => {
     const socketCollection = db.collection('sockets');
 
     const socketQuery = {
-      scheduleDate: { $lte: new Date()},
-      processedDate: { $exists: false},
+      scheduleDate: { $lte: new Date() },
+      processedDate: { $exists: false },
       // type: "SafeGraph",
       // rawDataUpdateConfig: {$exists: true}
       // fileType: "XLSX",
@@ -54,8 +54,9 @@ const run = async () => {
 
 
     // Get config array from DB
-    const dataSocketConfigs = await getDataSocketConfig(socketCollection, socketQuery);
-    console.log('Number of Sockets to Run:', dataSocketConfigs.length);
+    const dataSocketConfigs = await getDataSocketConfig(socketCollection, socketQuery)
+
+    console.log('Number of Sockets to Run:', dataSocketConfigs.length)
 
     // const dataSocketConfigs = [
     //   {
@@ -149,7 +150,15 @@ const run = async () => {
 
 
     // Execute data socket by data socket type
-    for await (config of dataSocketConfigs) {
+    for await (config of dataSocketConfigs.sort((a, b) => {
+      if (a.runFirst && !b.runFirst) {
+        return -1;
+      }
+      else if (b.runFirst && !a.runFirst) {
+        return 1;
+      }
+      return 0;
+    })) {
 
       let updatedData = null;
 
@@ -195,8 +204,6 @@ const run = async () => {
 
             } else {
 
-              // console.log(arrayData);
-
               updatedData = await updateWithDataArrays({
                 arrayData,
                 dataFromDB,
@@ -214,11 +221,11 @@ const run = async () => {
 
             objectArray.forEach(obj =>
               updatedData = updatedWithObject({
-                dataFromDB:  { 
-                  data: updatedData 
-                  ? updatedData 
-                  : structuredClone(dataFromDB.data)
-                }, 
+                dataFromDB: {
+                  data: updatedData
+                    ? updatedData
+                    : structuredClone(dataFromDB.data)
+                },
                 obj
               })
             )
@@ -315,7 +322,7 @@ const run = async () => {
 
                   updatedData = await updatedWithObject({
                     dataFromDB: updatedData
-                      ? {data: updatedData}
+                      ? { data: updatedData }
                       : structuredClone(dataFromDB),
                     obj: {
                       data,
@@ -389,28 +396,28 @@ const run = async () => {
 
                   if (keysAreGeos) {
                     // console.log(util.inspect(data, false, null, true));
-                    
+
                     if (!source[category][section]) {
-                      source[category][section] = {}; 
+                      source[category][section] = {};
                     }
 
-                    if ( (!source[category][section][geo])) {
-                      source[category][section][geo] = {}; 
+                    if ((!source[category][section][geo])) {
+                      source[category][section][geo] = {};
                     }
 
                     // Object.entries(data).forEach(([indicatorKey, dataObject], i) =>
-                      Object.entries(data?.[indicator] || {}).forEach(([key, value]) => {
-                        const geoKey = config?.geoManifest?.[key] || key;
-                        source[category][section][geo][geoKey] = {
-                          [indicator] : value
-                        }
+                    Object.entries(data?.[indicator] || {}).forEach(([key, value]) => {
+                      const geoKey = config?.geoManifest?.[key] || key;
+                      source[category][section][geo][geoKey] = {
+                        [indicator]: value
+                      }
 
-                        // if (i === 0) {
-                        //   source[category][geo][geoKey] = {};
-                        //   source[category][geo][geoKey][indicatorKey] = {}
-                        // }
-                        // source[category][geo][geoKey][indicatorKey] = value
-                      })
+                      // if (i === 0) {
+                      //   source[category][geo][geoKey] = {};
+                      //   source[category][geo][geoKey][indicatorKey] = {}
+                      // }
+                      // source[category][geo][geoKey][indicatorKey] = value
+                    })
                     // )
                   } else {
 
@@ -427,9 +434,9 @@ const run = async () => {
                   }
 
                   updatedData = mergeObjects(
-                    updatedData 
-                      ? updatedData 
-                      : structuredClone(dataFromDB.data), 
+                    updatedData
+                      ? updatedData
+                      : structuredClone(dataFromDB.data),
                     source
                   )
                 })
@@ -451,27 +458,27 @@ const run = async () => {
         }
 
         if (
-          (updatedData && !_.isEqual(updatedData, dataFromDB.data)) || 
+          (updatedData && !_.isEqual(updatedData, dataFromDB.data)) ||
           (config.type === 'Direct' && config.update)
         ) {
           console.log('NEW DATA');
-          const updateObject = config.type === 'Direct' 
+          const updateObject = config.type === 'Direct'
             ? {
-                ...config.update,
-                updatedOn: new Date()
-              }
+              ...config.update,
+              updatedOn: new Date()
+            }
             : {
               data: updatedData,
               updatedOn: new Date()
-              }
+            }
 
           await dataCollection.findOneAndUpdate(
-            { project: config.project }, 
+            { project: config.project },
             { $set: updateObject }
           )
           await socketCollection.findOneAndUpdate(
-            {_id: config._id},
-            { $set: {processedDate: new Date()}}
+            { _id: config._id },
+            { $set: { processedDate: new Date() } }
           )
 
           // HANDLE SOCKET CONFIG UPDATE
@@ -483,8 +490,8 @@ const run = async () => {
           // HANDLE NO DATA
           if (config?.mapToGeo) {
             await socketCollection.findOneAndUpdate(
-              {_id: config._id},
-              { $set: {processedDate: new Date()}}
+              { _id: config._id },
+              { $set: { processedDate: new Date() } }
             )
           }
         }
