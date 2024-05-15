@@ -566,6 +566,7 @@ const updateDataDashboard = async config => {
     url,
     { useNewUrlParser: true, useUnifiedTopology: true }
   );
+  console.log('Connected to MongoDB', url)
   const coll = client.db(dbName).collection(collectionName);
   const cursor = coll.aggregate(aggregationPipeline);
   const array = await cursor.toArray();
