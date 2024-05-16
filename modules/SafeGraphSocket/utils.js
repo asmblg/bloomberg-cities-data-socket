@@ -143,6 +143,7 @@ const ToMongoDB = async ({
             { upsert: true }
           )
         } else {
+          obj.source_directory = sourceDirectory
           await collection.insertOne(obj);
         }
 

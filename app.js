@@ -46,6 +46,7 @@ const run = async () => {
     const socketQuery = {
       scheduleDate: { $lte: new Date() },
       processedDate: { $exists: false },
+      // type: "BLS API"
       // type: "SafeGraph",
       // rawDataUpdateConfig: {$exists: true}
       // fileType: "XLSX",
