@@ -46,6 +46,9 @@ const run = async () => {
     const socketQuery = {
       scheduleDate: { $lte: new Date() },
       processedDate: { $exists: false },
+      deactivated:  { $exists: false },
+      // source: 'Lightcast'
+      // source: 'Alignable'
       // type: "BLS API"
       // type: "SafeGraph",
       // rawDataUpdateConfig: {$exists: true}
@@ -151,7 +154,9 @@ const run = async () => {
 
 
     // Execute data socket by data socket type
-    for await (config of dataSocketConfigs.sort((a, b) => {
+    for await (config of dataSocketConfigs
+      // .filter((obj, i) => i === 0)
+      .sort((a, b) => {
       if (a.runFirst && !b.runFirst) {
         return -1;
       }
@@ -166,6 +171,8 @@ const run = async () => {
       const dataFromDB = await dataCollection.findOne({
         project: config.project
       });
+
+      
 
       try {
         switch (config.type) {
@@ -218,7 +225,7 @@ const run = async () => {
           // FOR BLS
           case 'BLS API': {
             const objectArray = await APISocket(config);
-            // console.log(objectArray)
+            console.log(objectArray)
 
             objectArray.forEach(obj =>
               updatedData = updatedWithObject({
@@ -341,10 +348,14 @@ const run = async () => {
             config.clientID = process.env.MS_CLIENT_ID;
             config.clientSecret = process.env.MS_CLIENT_SECRET;
 
+            console.log(config.project)
             const data = await OneDriveSocket(config);
+
+            console.log('data:', data);
 
             const { mappings } = config;
 
+            // ********* ENABLE WHEN ALIGNABLE MAPPING ISSUE IS FIXED ********
             if (data) {
               if (config.mapToGeo) {
 

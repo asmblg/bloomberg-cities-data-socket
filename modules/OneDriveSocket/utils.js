@@ -72,50 +72,50 @@ const fetchFromOneDrive = async ({
   });
 };
 
-const parseXLSX = async ({
-  mappings,
-  worksheet,
-}) => {
-  const resultsArray = [];
+// const parseXLSX = async ({
+//   mappings,
+//   worksheet,
+// }) => {
+//   const resultsArray = [];
 
-  mappings.forEach(({
-    destination,
-    origin: {
-      rowIndex,
-      columnIndex,
-      rowIndexStart,
-      rowIndexEnd,
-      keyColumnIndex,
-      dataColumnIndex,
-      rowSearch
-    }
-  }) => {
-    if (rowSearch) {
-    }
-    if (rowIndex) {
-      resultsArray.push({
-        ...destination,
-        value: worksheet[rowIndex][columnIndex]
-      })
-    };
-    if (rowIndexStart && rowIndexEnd) {
-      const obj = {};
-      const rows = worksheet
-        .filter((item, i) =>
-          i >= rowIndexStart &&
-          i <= rowIndexEnd
-        );
-      rows.forEach((row) =>
-        obj[row[keyColumnIndex]] = row[dataColumnIndex]
-      );
-      resultsArray.push({
-        ...destination,
-        value: obj
-      });
-    }
-  })
-  return resultsArray;
-};
+//   mappings.forEach(({
+//     destination,
+//     origin: {
+//       rowIndex,
+//       columnIndex,
+//       rowIndexStart,
+//       rowIndexEnd,
+//       keyColumnIndex,
+//       dataColumnIndex,
+//       rowSearch
+//     }
+//   }) => {
+//     if (rowSearch) {
+//     }
+//     if (rowIndex) {
+//       resultsArray.push({
+//         ...destination,
+//         value: worksheet[rowIndex][columnIndex]
+//       })
+//     };
+//     if (rowIndexStart && rowIndexEnd) {
+//       const obj = {};
+//       const rows = worksheet
+//         .filter((item, i) =>
+//           i >= rowIndexStart &&
+//           i <= rowIndexEnd
+//         );
+//       rows.forEach((row) =>
+//         obj[row[keyColumnIndex]] = row[dataColumnIndex]
+//       );
+//       resultsArray.push({
+//         ...destination,
+//         value: obj
+//       });
+//     }
+//   })
+//   return resultsArray;
+// };
 
 const mapInNewData = async ({
   parsedData,
@@ -188,20 +188,29 @@ const processData = ({mappings, worksheet}) => {
     let endRowIndex = null;
 
     const headerRow = worksheet[0]
-    .map(cell => `${cell}`
+    .map(cell => `${cell}`.toLowerCase()
     // .toLocaleLowerCase()
     .trim());
 
-    const labelIndex = labelField ? headerRow.indexOf(labelField) > -1 ? headerRow.indexOf(labelField) : labelColumn : null;
-    const valueIndex = headerRow.indexOf(valueField) > -1 ? headerRow.indexOf(valueField) : valueColumn;
-    const groupIndex = headerRow.indexOf(groupField) > -1 ? headerRow.indexOf(groupField) : groupColumn;
-    const countUniqueIndex = headerRow.indexOf(countUniqueField) > -1 ? headerRow.indexOf(countUniqueField) : countUniqueColumn;
+    const labelIndex = labelField 
+      ? headerRow.indexOf(labelField?.toLowerCase()) > -1 
+        ? headerRow.indexOf(labelField?.toLowerCase()) 
+        : null // Assume first column if not specified 
+      : labelColumn;
+    const valueIndex = headerRow.indexOf(valueField?.toLowerCase()) > -1 ? headerRow.indexOf(valueField?.toLowerCase()) : valueColumn;
+    const groupIndex = headerRow.indexOf(groupField?.toLowerCase()) > -1 ? headerRow.indexOf(groupField?.toLowerCase()) : groupColumn;
+    const countUniqueIndex = headerRow.indexOf(countUniqueField?.toLowerCase()) > -1 ? headerRow.indexOf(countUniqueField?.toLowerCase()) : countUniqueColumn;
     const objectForCheckingUniqueCount = {};
 
-    if (rowSearch && labelIndex) {
+    console.log(mapping);
+    // console.log('Row search', rowSearch);
+    // console.log('Label Index', labelIndex)
+    if (rowSearch && (labelIndex || labelIndex === 0)) {
       worksheet.forEach((row, i) => {
         row.forEach(cell => { 
-          if (`${cell}`.search(rowSearch) !== -1) {
+
+          if (`${cell}`.toLowerCase().search(rowSearch) !== -1) {
+            console.log('Found', cell, rowSearch)
             startRowIndex = i + 2
           }
         })
@@ -215,24 +224,29 @@ const processData = ({mappings, worksheet}) => {
       endRowIndex = startRowIndex + rowCount
     };
 
+    console.log({
+      startRowIndex,
+      endRowIndex
+    })
+
     const slicedRows = startRowIndex && endRowIndex 
       ? worksheet.slice(startRowIndex, endRowIndex)
       : worksheet;
     
-    // console.log(slicedRows)
+    console.log('Sliced Row Length', slicedRows.length)
 
-    const filterIndex =  filter?.field && headerRow.indexOf(filter?.field) > -1 
-      ? headerRow.indexOf(filter?.field) 
+    const filterIndex =  filter?.field && headerRow.indexOf(filter?.field?.toLowerCase()) > -1 
+      ? headerRow.indexOf(filter?.field?.toLowerCase()) 
       : filter?.column;
     
-    const filterIndex2 = filter2?.field && headerRow.indexOf(filter2?.field) > -1 
-    ? headerRow.indexOf(filter2?.field) 
+    const filterIndex2 = filter2?.field && headerRow.indexOf(filter2?.field?.toLowerCase()) > -1 
+    ? headerRow.indexOf(filter2?.field?.toLowerCase()) 
     : filter2?.column;
 
     // console.log(slicedRows);
 
     slicedRows
-    .filter(row => labelIndex ? !excludeKeys?.includes(row[labelIndex]?.trim()) : true)
+    .filter(row => (labelIndex || labelIndex === 0) ? !excludeKeys?.includes(row[labelIndex]?.trim()) : true)
     .filter(row => filter 
       ? filter.value 
         ? row[filterIndex]?.trim() === filter.value
@@ -248,16 +262,16 @@ const processData = ({mappings, worksheet}) => {
           : true 
       : true)
     .forEach(row => {
-      // console.log(row);
+      console.log(row);
       const countUniqueValue = row[countUniqueIndex];
 
       const label = labelIndex || labelIndex === 0
         ? labelFormatter 
           ? formatLabel({
-              label: row[labelIndex]?.trim(), 
+              label: row[labelIndex]?.toString()?.trim(), 
               labelFormatter
             })
-          : `${row[labelIndex]?.trim()}`
+          : `${row[labelIndex]?.toString()?.trim()}`
         : null;
       let value = valueIndex 
           ? Number(row[valueIndex] || 0) 
@@ -285,7 +299,7 @@ const processData = ({mappings, worksheet}) => {
           : nullGroup || '';
       
 
-      if (label !== '' && labelIndex && (valueIndex || countRows)) {
+      if (label !== '' && (labelIndex || labelIndex === 0) && (valueIndex || countRows)) {
 
         if (!result[indicator]) {
           result[indicator] = {}
@@ -346,6 +360,8 @@ const processData = ({mappings, worksheet}) => {
       }
     })
 
+    
+
     // console.log(objectForCheckingUniqueCount);
 
   });
@@ -353,7 +369,43 @@ const processData = ({mappings, worksheet}) => {
   // console.log(result);
 
   return result;
-}
+};
+
+const flattenObject = (obj) => {
+  const flattenedValues = {};
+  let nestedKey = 'group'
+
+  function recurse(current, property) {
+      if (Object(current) !== current) {
+          flattenedValues[property] = current;
+      } else {
+          for (const key in current) {
+              nestedKey = key;
+              recurse(current[key], property ? `${property}.${key}` : key);
+
+          }
+      }
+  }
+
+  recurse(obj, "");
+  return {flattenedValues, nestedKey};
+};
+
+const calculatePercentageOnNestValues = (result, indicator, divisor) => {
+  // Flatten the result[indicator] object
+  const {flattenedValues, nestedKey} = flattenObject(result[indicator]);
+  // Calculate the total from the flattened values
+  // const nestKeys = Object.keys(flattenedValues);
+  const total = Object.values(flattenedValues).reduce((a, b) => a + b, 0);
+
+  // Calculate the sum of the values under the specified divisor
+  const divisorTotal = Object.keys(flattenedValues)
+      .filter(key => key.startsWith(divisor))
+      .reduce((sum, key) => sum + flattenedValues[key], 0);
+
+  // Calculate and update the percentage
+  result[indicator] = { [nestedKey]: (divisorTotal / total) * 100 };
+};
 
 const runCalculations = ({mappings, result}) => {
   mappings.forEach(mapping => {
@@ -376,20 +428,57 @@ const runCalculations = ({mappings, result}) => {
           Object.entries(result[indicator]).forEach(([key,value]) =>
             Object.entries(groups).forEach(([groupKey, groupArray]) => {
               if (groupArray.includes(key)) {
-                if (!groupedObj[groupKey]) {
-                  groupedObj[groupKey] = value
-                } else {
-                  groupedObj[groupKey] += value
+                if (Object.keys(value)?.[0]) {
+                  Object.entries(value).forEach(([valueKey, valueValue]) => {
+                    if (!groupedObj[groupKey]) {
+                      groupedObj[groupKey] = {};
+                    if (!groupedObj[groupKey][valueKey])
+                      groupedObj[groupKey][valueKey] = valueValue;
+                    } else {
+                      groupedObj[groupKey][valueKey] += valueValue
+                    }
+                  })
+                }
+                else {
+                  if (!groupedObj[groupKey]) {
+                    groupedObj[groupKey] = value
+                  } else {
+                    groupedObj[groupKey] += value
+                  }
                 }
               }
             })
           )
           result[indicator] = groupedObj;
+          
+          // console.log('Grouping Object', groupedObj)
         }
         if (type === 'percentOfTotal') {
-          const total = Object.values(result[indicator]).reduce((a,b) => a + b, 0);
-          result[indicator] = (result[indicator][divisor] / total) * 100;
+          if (Object.values(Object.values(result[indicator])[0])[0]) {
+            // console.log('Reducing nested values');
+            calculatePercentageOnNestValues(result,indicator,divisor)
+
+          } else {
+            const total = Object.values(result[indicator]).reduce((a,b) => a + b, 0);
+            result[indicator] = (result[indicator][divisor] / total) * 100;
+            }
+        } 
+        if (type === 'invertKeys') {
+          const invertedObject = {};
+
+          Object.entries(result[indicator]).forEach(([topKey, object]) => {
+            Object.entries(object).forEach(([subKey, value]) => {
+              if (!invertedObject[subKey]) {
+                invertedObject[subKey] = {}
+              }
+              invertedObject[subKey][topKey] = value
+            })
+          })
+          
+          result[indicator] = invertedObject;
         }
+        // console.log(indicator, type, result[indicator])
+
       })
     }
   })
@@ -397,7 +486,7 @@ const runCalculations = ({mappings, result}) => {
 }
 
 module.exports = {
-  parseXLSX,
+  // parseXLSX,
   mapInNewData,
   getToken,
   fetchFromOneDrive,

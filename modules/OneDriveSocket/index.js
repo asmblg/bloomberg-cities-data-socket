@@ -43,7 +43,7 @@ const OneDriveSocket = async ({
   const files = filesInDirectory
     .filter(({ name }) => {
       if (fileName) {
-        return name.search(fileName) !== -1;
+        return name?.toLowerCase().search(fileName?.toLowerCase()) !== -1;
       }
       if (fileQuery) {
         const boolArray = []
@@ -107,7 +107,7 @@ const OneDriveSocket = async ({
           accessToken: msGraphToken
         });
 
-        console.log(worksheet.length);
+        // console.log(worksheet.length);
 
 
         result = processData({mappings, worksheet});
