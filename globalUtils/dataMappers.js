@@ -235,6 +235,13 @@ const updateByObjectKeys = ({
 
 };
 
+const excelDateToJSDate = (excelDate) => {
+  // Excel epoch starts on January 1, 1900, so subtract 1 day (Excel bug with leap year 1900)
+  const epoch = new Date(1900, 0, 0); // January 0, 1900
+  const jsDate = new Date(epoch.getTime() + excelDate * 24 * 60 * 60 * 1000);
+  return jsDate.toLocaleDateString("en-US"); // Format as mm/dd/yyyy
+}
+
 
 const updateBySubtypeGeoTypeGeoWithValue = ({
   mapping: {
@@ -270,5 +277,6 @@ module.exports = {
   updateByObjectKeyYearQuarter,
   updateByObjectKeysYearQuarter,
   updateByObjectKeys,
-  updateGeoJSONWithDataArrays
+  updateGeoJSONWithDataArrays,
+  excelDateToJSDate
 }

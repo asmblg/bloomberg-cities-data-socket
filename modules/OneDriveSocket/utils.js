@@ -49,6 +49,7 @@ const fetchFromOneDrive = async ({
       : `${directory}/children`
     const url = `https://graph.microsoft.com/v1.0/${drive}/items/${query}`
 
+    console.log(url);
     const req = http.get(url, options, (res) => {
       const chunks = [];
 
@@ -202,7 +203,7 @@ const processData = ({mappings, worksheet}) => {
     const countUniqueIndex = headerRow.indexOf(countUniqueField?.toLowerCase()) > -1 ? headerRow.indexOf(countUniqueField?.toLowerCase()) : countUniqueColumn;
     const objectForCheckingUniqueCount = {};
 
-    console.log(mapping);
+    // console.log(mapping);
     // console.log('Row search', rowSearch);
     // console.log('Label Index', labelIndex)
     if (rowSearch && (labelIndex || labelIndex === 0)) {
@@ -224,16 +225,16 @@ const processData = ({mappings, worksheet}) => {
       endRowIndex = startRowIndex + rowCount
     };
 
-    console.log({
-      startRowIndex,
-      endRowIndex
-    })
+    // console.log({
+    //   startRowIndex,
+    //   endRowIndex
+    // })
 
     const slicedRows = startRowIndex && endRowIndex 
       ? worksheet.slice(startRowIndex, endRowIndex)
       : worksheet;
     
-    console.log('Sliced Row Length', slicedRows.length)
+    // console.log('Sliced Row Length', slicedRows.length)
 
     const filterIndex =  filter?.field && headerRow.indexOf(filter?.field?.toLowerCase()) > -1 
       ? headerRow.indexOf(filter?.field?.toLowerCase()) 
@@ -262,7 +263,7 @@ const processData = ({mappings, worksheet}) => {
           : true 
       : true)
     .forEach(row => {
-      console.log(row);
+      // console.log(row);
       const countUniqueValue = row[countUniqueIndex];
 
       const label = labelIndex || labelIndex === 0

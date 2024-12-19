@@ -375,7 +375,6 @@ const getFileLinks = async ({
       ...params,
       file_extension: fileType
     },
-    // url: `https://marketplace.deweydata.io/api/data/v2/list/${path}/?erik.woodworth@asmblg.io`,
     url: apiURL,
     headers: {
       "X-API-KEY": API_KEY,
@@ -388,6 +387,7 @@ const getFileLinks = async ({
   const { data } = await axios(config)
     // .then(({ data: download_links }) => download_links)
     .catch((error) => console.log(error));
+
 
   // console.log(fileLinks);
   const fileLinks = data?.download_links.map(({ link }) => link)

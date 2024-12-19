@@ -16,7 +16,7 @@ This document provides a comprehensive guide for creating and modifying configur
   - [DataAxel WebDriver Parameters](#dataaxel-webdriver-parameters)
 
 ## Introduction
-The configuration objects are crucial for the Data Socket application to retrieve, process, and map data from the each source to the database collection serving the frontend dashboard. This guide will help you understand how to create and modify these configuration objects effectively.
+The configuration objects are crucial for the Data Socket application to retrieve, process, and map data from each source to the data collection on the database. This guide will help you understand how to create and modify these configuration objects effectively.
 
 ## Installation
 Before you begin, ensure you have [Node.js](https://nodejs.org/) and [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed on your system.
@@ -38,7 +38,7 @@ Create a `.env` file in the root of your installed application.  Populate the fi
       MONGODB_URI=mongodb+srv://username:password@clusterName.mongodb.net/?retryWrites=true&w=majority
       ```
 
-    - Name of the database you are connecting to in MongoDB
+    - Name of the MongoDB database to which you are connecting
       ```
       DATABASE_NAME=YourDatabaseName
       ```
@@ -63,13 +63,10 @@ Create a `.env` file in the root of your installed application.  Populate the fi
       BLS_API_KEY=YourBureauOfLaborStatisticsAPIKey
       ```
 
-    - Account ID for Data Axel. This is typically your registered email address.
+    - Account ID and password for Data Axel. The ID is typically your registered email address.
       ```
       DATA_AXEL_ACCOUNT_ID=YourDataAxelUserName
-      ```
 
-    - Password for your Data Axel account.
-      ```
       DATA_AXEL_PASSWORD=YourDataAxelPassword
       ```
     - API key for Safegraph data download. Obtain from your key by setting it up with the Dewey Marketplace platform.
@@ -216,3 +213,10 @@ All configuration objects will need these parameters with valid values.
 
 
 
+## Contributors
+
+Assemblage Consulting LLC
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](https://opensource.org/license/mit) file for details.

@@ -1,4 +1,5 @@
 const axios = require('axios');
+const util = require('util');
 
 const getCensusData = async ({url, query}) => {
   const queryKeys = Object.keys(query);
@@ -54,7 +55,9 @@ const getBLSData = async ({url, tables}) => {
       series.forEach(obj => {
         const dataObj = {};
         const mapping = tables.find(({seriesID}) => seriesID === obj.seriesID)?.mapping
-        obj.data.forEach(({year, period, value}) =>{
+        obj.data
+        .filter(({footnotes}) => footnotes[0]?.code !== 'P')
+        .forEach(({year, period, value}) =>{
           const dateKey = `${year}-${period.replace(/m/i, '')}-1`
           dataObj[dateKey] = value; 
         });
@@ -62,6 +65,8 @@ const getBLSData = async ({url, tables}) => {
           data: dataObj,
           mapping: mapping
         });
+        // console.log(util.inspect(dataObj, false, null, true));
+
       })
     }
   };

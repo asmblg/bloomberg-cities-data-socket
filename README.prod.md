@@ -1,7 +1,9 @@
 
-# Project Name
+# Bloomberg Cities Data Socket
 
-Describe your project here. Include a brief description of what the application does and what technologies it utilizes.
+## Description
+
+This application is designed to automate the setup and deployment of a Node.js application that utilizes Puppeteer and MongoDB on an Amazon EC2 instance. It includes instructions for launching an EC2 instance, installing necessary software, deploying the Node.js application, and automating updates and script execution using cron jobs. Additionally, it provides guidelines for monitoring, logging, backup, and security to ensure the smooth operation and maintenance of the application.
 
 ## Prerequisites
 
@@ -70,7 +72,6 @@ Follow these steps to set up your Amazon EC2 instance:
      pm2 startup
      ```
 
-## Automating Updates with Cron
 
 ## Automating Updates and Script Execution with Cron
 
@@ -185,8 +186,8 @@ Add the following line to pull changes daily at midnight:
 
 ## Contributors
 
-List the people who have contributed to this project.
+Assemblage Consulting LLC
 
 ## License
 
-This project uses the following license: [license_name](link_to_license).
+This project is licensed under the MIT License - see the [LICENSE](https://opensource.org/license/mit) file for details.

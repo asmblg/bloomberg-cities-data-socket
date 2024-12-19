@@ -1,13 +1,15 @@
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
 const _ = require('lodash');
+const util = require('util');
 const {
   updateWithDataArrays,
   updatedWithObject,
   updateByObjectKeyYearQuarter,
   updateByObjectKeysYearQuarter,
   updateByObjectKeys,
-  updateGeoJSONWithDataArrays
+  updateGeoJSONWithDataArrays,
+  excelDateToJSDate
 } = require('./globalUtils/dataMappers');
 const {
   APISocket,
@@ -46,11 +48,12 @@ const run = async () => {
     const socketQuery = {
       scheduleDate: { $lte: new Date() },
       processedDate: { $exists: false },
-      deactivated:  { $exists: false },
+      deactivated: { $exists: false },
       // source: 'Lightcast'
       // source: 'Alignable'
       // type: "BLS API"
-      // type: "SafeGraph",
+      // type: "SafeGraph Subareas",
+      // fileName: 'JLL_Q32024'
       // rawDataUpdateConfig: {$exists: true}
       // fileType: "XLSX",
       // project: "Phoenix"
@@ -58,121 +61,210 @@ const run = async () => {
 
 
     // Get config array from DB
-    const dataSocketConfigs = await getDataSocketConfig(socketCollection, socketQuery)
-
-    console.log('Number of Sockets to Run:', dataSocketConfigs.length)
-
+    const dataSocketConfigs = await getDataSocketConfig(socketCollection, socketQuery);
     // const dataSocketConfigs = [
     //   {
-    //     "project": "Tampa",
-    //     "type": "CensusAPI",
-    //     "scheduleDate": {
-    //       "$date": "2024-01-15T00:00:00.000Z"
-    //     },
-    //     "url": "https://api.census.gov/data/2022/acs/acs1/subject",
-    //     "query": {
-    //       "get": "NAME,S0801_C01_013E",
-    //       "for": "place:71000",
-    //       "in": "state:12"
-    //     },
-    //     "source": "ACS 1-year 2022",
-    //     "description": "Remote Workers in City of Tampa from 2022 Subject Table",
-    //     "tableDescription": "Subject Tables",
-    //     "mappings": [
-    //       {
-    //         "destination": {
-    //           "geo": "city",
-    //           "category": "jobs",
-    //           "year": "2022",
-    //           "indicator": "remote_workers"
-    //         },
-    //         "origin": {
-    //           "valueIndex": "S0801_C01_013E"
-    //         }
-    //       }
-    //     ]
-    //   },
-    //   {
     //     "project": "Phoenix",
-    //     "type": "CensusAPI",
-    //     "scheduleDate": {
-    //       "$date": "2024-01-15T00:00:00.000Z"
-    //     },
-    //     "url": "https://api.census.gov/data/2022/acs/acs1/subject",
-    //     "query": {
-    //       "get": "NAME,S0801_C01_013E",
-    //       "for": "place:55000",
-    //       "in": "state:04"
-    //     },
-    //     "source": "ACS 1-year 2022",
-    //     "description": "Remote Workers in City of Phoenix from 2022 Subject Table",
-    //     "tableDescription": "Subject Tables",
+    //     "type": "OneDrive",
+    //     "scheduleDate": "2024-12-15",
+    //     "fileType": "XLSX",
+    //     "source": "GUSTO",
+    //     "directoryID": "01E52WSOXGKJC7O23LOVAYBR7SEUA2DDYB",
+    //     "fileName": "Economic Trends_data",
+    //     "description": "GUSTO Economic Trends Data for Phoenix Q3 2024",
+    //     "sheetName": "Economic Trends_data",
     //     "mappings": [
     //       {
     //         "destination": {
     //           "geo": "city",
-    //           "category": "jobs",
-    //           "year": "2022",
-    //           "indicator": "remote_workers"
+    //           "category": "smallbusiness",
+    //           "indicator": "p_hire",
+    //           "labelCalc": "numToDate",
+    //           "groupCalc": "quarterAvg"
     //         },
     //         "origin": {
-    //           "valueIndex": "S0801_C01_013E"
+    //           "labelField": "Date",
+    //           "valueField": "Avg. Metric Percentage",
+    //           "filter": {
+    //             "field": "Metrics",
+    //             "value": "Hire %"
+    //           },
+    //           "filter2": {
+    //             "field": "Dimension Description",
+    //             "value": "Phoenix, AZ"
+    //           }
+    //         }
+    //       },
+    //       {
+    //         "destination": {
+    //           "geo": "city",
+    //           "category": "smallbusiness",
+    //           "indicator": "p_termination",
+    //           "labelCalc": "numToDate",
+    //           "groupCalc": "quarterAvg"
+
+    //         },
+    //         "origin": {
+    //           "labelField": "Date",
+    //           "valueField": "Avg. Metric Percentage",
+    //           "filter": {
+    //             "field": "Metrics",
+    //             "value": "Termination %"
+    //           },
+    //           "filter2": {
+    //             "field": "Dimension Description",
+    //             "value": "Phoenix, AZ"
+    //           }
     //         }
     //       }
     //     ]
     //   },
     //   {
     //     "project": "Baltimore",
-    //     "type": "CensusAPI",
-    //     "scheduleDate": {
-    //       "$date": "2024-01-15T00:00:00.000Z"
-    //     },
-    //     "url": "https://api.census.gov/data/2022/acs/acs1/subject",
-    //     "query": {
-    //       "get": "NAME,S0801_C01_013E",
-    //       "for": "place:04000",
-    //       "in": "state:24"
-    //     },
-    //     "source": "ACS 1-year 2022",
-    //     "description": "Remote Workers in City of Baltimore from 2022 Subject Table",
-    //     "tableDescription": "Subject Tables",
+    //     "type": "OneDrive",
+    //     "scheduleDate": "2024-12-15",
+    //     "fileType": "XLSX",
+    //     "source": "GUSTO",
+    //     "directoryID": "01E52WSOXGKJC7O23LOVAYBR7SEUA2DDYB",
+    //     "fileName": "Economic Trends_data",
+    //     "description": "GUSTO Economic Trends Data for Baltimore Q3 2024",
+    //     "sheetName": "Economic Trends_data",
     //     "mappings": [
     //       {
     //         "destination": {
     //           "geo": "city",
-    //           "category": "jobs",
-    //           "year": "2022",
-    //           "indicator": "remote_workers"
+    //           "category": "smallbusiness",
+    //           "indicator": "p_hire",
+    //           "labelCalc": "numToDate",
+    //           "groupCalc": "quarterAvg"
     //         },
     //         "origin": {
-    //           "valueIndex": "S0801_C01_013E"
+    //           "labelField": "Date",
+    //           "valueField": "Avg. Metric Percentage",
+    //           "filter": {
+    //             "field": "Metrics",
+    //             "value": "Hire %"
+    //           },
+    //           "filter2": {
+    //             "field": "Dimension Description",
+    //             "value": "Baltimore, MD"
+    //           }
+    //         }
+    //       },
+    //       {
+    //         "destination": {
+    //           "geo": "city",
+    //           "category": "smallbusiness",
+    //           "indicator": "p_termination",
+    //           "labelCalc": "numToDate",
+    //           "groupCalc": "quarterAvg"
+
+    //         },
+    //         "origin": {
+    //           "labelField": "Date",
+    //           "valueField": "Avg. Metric Percentage",
+    //           "filter": {
+    //             "field": "Metrics",
+    //             "value": "Termination %"
+    //           },
+    //           "filter2": {
+    //             "field": "Dimension Description",
+    //             "value": "Baltimore, MD"
+    //           }
+    //         }
+    //       }
+    //     ]
+    //   },
+    //   {
+    //     "project": "Tampa",
+    //     "type": "OneDrive",
+    //     "scheduleDate": "2024-12-15",
+    //     "fileType": "XLSX",
+    //     "source": "GUSTO",
+    //     "directoryID": "01E52WSOXGKJC7O23LOVAYBR7SEUA2DDYB",
+    //     "fileName": "Economic Trends_data",
+    //     "description": "GUSTO Economic Trends Data for Tampa Q3 2024",
+    //     "sheetName": "Economic Trends_data",
+    //     "mappings": [
+    //       {
+    //         "destination": {
+    //           "geo": "city",
+    //           "category": "smallbusiness",
+    //           "indicator": "p_hire",
+    //           "labelCalc": "numToDate",
+    //           "groupCalc": "quarterAvg"
+    //         },
+    //         "origin": {
+    //           "labelField": "Date",
+    //           "valueField": "Avg. Metric Percentage",
+    //           "filter": {
+    //             "field": "Metrics",
+    //             "value": "Hire %"
+    //           },
+    //           "filter2": {
+    //             "field": "Dimension Description",
+    //             "value": "Tampa, FL"
+    //           }
+    //         }
+    //       },
+    //       {
+    //         "destination": {
+    //           "geo": "city",
+    //           "category": "smallbusiness",
+    //           "indicator": "p_termination",
+    //           "labelCalc": "numToDate",
+    //           "groupCalc": "quarterAvg"
+
+    //         },
+    //         "origin": {
+    //           "labelField": "Date",
+    //           "valueField": "Avg. Metric Percentage",
+    //           "filter": {
+    //             "field": "Metrics",
+    //             "value": "Termination %"
+    //           },
+    //           "filter2": {
+    //             "field": "Dimension Description",
+    //             "value": "Tampa, FL"
+    //           }
     //         }
     //       }
     //     ]
     //   }
     // ]
 
+    console.log('Number of Sockets to Run:', dataSocketConfigs.length)
 
     // Execute data socket by data socket type
     for await (config of dataSocketConfigs
       // .filter((obj, i) => i === 0)
       .sort((a, b) => {
-      if (a.runFirst && !b.runFirst) {
-        return -1;
-      }
-      else if (b.runFirst && !a.runFirst) {
-        return 1;
-      }
-      return 0;
-    })) {
+        if (a.runFirst && !b.runFirst) {
+          return -1;
+        }
+        else if (b.runFirst && !a.runFirst) {
+          return 1;
+        }
+        else if (a.runLast && !b.runLast) {
+          return 1;
+        }
+        else if (b.runLast && !a.runLast) {
+          return -1;
+        }
+        else {
+          return 0;
+        }
+      })) {
 
       let updatedData = null;
 
-      const dataFromDB = await dataCollection.findOne({
-        project: config.project
-      });
+      const dataFromDB = config?.project
+        ? await dataCollection.findOne({
+          project: config.project
+        })
+        : {};
 
-      
+
 
       try {
         switch (config.type) {
@@ -225,7 +317,7 @@ const run = async () => {
           // FOR BLS
           case 'BLS API': {
             const objectArray = await APISocket(config);
-            console.log(objectArray)
+            // console.log(objectArray)
 
             objectArray.forEach(obj =>
               updatedData = updatedWithObject({
@@ -281,13 +373,35 @@ const run = async () => {
 
             if (data) {
 
-              updatedData = await updatedWithObject({
-                dataFromDB: structuredClone(dataFromDB),
-                obj: {
-                  data,
-                  mapping: config.dashboardDataUpdate.mapping
+              const {
+                section,
+                geotype,
+                category,
+                indicator
+              } = config.dashboardDataUpdate.mapping;
+
+              // console.log('DATA FROM DB', dataFromDB.data[section][geotype][category][indicator]);
+
+              updatedData = mergeObjects(
+                structuredClone(dataFromDB.data),
+                {
+                  [section]: {
+                    [geotype]: {
+                      [category]: {
+                        [indicator]: { ...data }
+                      }
+                    }
+                  }
                 }
-              });
+              )
+
+              // updatedData = await updatedWithObject({
+              //   dataFromDB: structuredClone(dataFromDB),
+              //   obj: {
+              //     data,
+              //     mapping: config.dashboardDataUpdate.mapping
+              //   }
+              // });
 
             };
 
@@ -326,17 +440,36 @@ const run = async () => {
 
                 if (data) {
 
-                  config.dashboardDataUpdate.mapping.geo = name;
+                  // config.dashboardDataUpdate.mapping.geo = name;
 
-                  updatedData = await updatedWithObject({
-                    dataFromDB: updatedData
-                      ? { data: updatedData }
-                      : structuredClone(dataFromDB),
-                    obj: {
-                      data,
-                      mapping: config.dashboardDataUpdate.mapping
+                  const { section, geotype, category, indicator } = config.dashboardDataUpdate.mapping;
+
+                  updatedData = mergeObjects(
+                    updatedData
+                      ? { ...updatedData }
+                      : structuredClone(dataFromDB.data),
+                    {
+                      [section]: {
+                        [geotype]: {
+                          [name]: {
+                            [category]: {
+                              [indicator]: { ...data }
+                            }
+                          }
+                        }
+                      }
                     }
-                  });
+                  )
+
+                  // updatedData = await updatedWithObject({
+                  //   dataFromDB: updatedData
+                  //     ? { data: updatedData }
+                  //     : structuredClone(dataFromDB),
+                  //   obj: {
+                  //     data,
+                  //     mapping: config.dashboardDataUpdate.mapping
+                  //   }
+                  // });
 
                 }
               }
@@ -348,14 +481,12 @@ const run = async () => {
             config.clientID = process.env.MS_CLIENT_ID;
             config.clientSecret = process.env.MS_CLIENT_SECRET;
 
-            console.log(config.project)
             const data = await OneDriveSocket(config);
-
-            console.log('data:', data);
 
             const { mappings } = config;
 
-            // ********* ENABLE WHEN ALIGNABLE MAPPING ISSUE IS FIXED ********
+            // console.log(data)
+
             if (data) {
               if (config.mapToGeo) {
 
@@ -398,13 +529,50 @@ const run = async () => {
                     geo,
                     section,
                     keysAreGeos,
-                    indicator
+                    indicator,
+                    labelCalc,
+                    groupCalc
                   }
                 }) => {
 
                   let source = {
                     [category]: {}
                   };
+
+                  if (labelCalc === 'numToDate') {
+                    Object.keys(data[indicator]).forEach(key => {
+                      const dateKey = excelDateToJSDate(key)
+                      data[indicator][dateKey] = data[indicator][key]
+                      delete data[indicator][key]
+                    })
+                  }
+
+                  if (groupCalc === 'quarterAvg') {
+                    const quarterData = {};
+                    Object.entries(data[indicator]).forEach(([key, value]) => {
+                      const date = new Date(key);
+                      const quarter = Math.floor((date.getMonth() + 3) / 3);
+                      const year = date.getFullYear();
+                      const quarterKey = `${year}-Q${quarter}`;
+                      if (!quarterData[quarterKey]) {
+                        quarterData[quarterKey] = [];
+                      }
+                      quarterData[quarterKey].push(value);
+                    });
+
+                    Object.entries(quarterData).forEach(([key, value]) => {
+                      if (value.length === 3) {
+                      const sum = value.reduce((acc, curr) => acc + curr, 0);
+                      const avg = sum / value.length;
+                      data[indicator][key] = avg;
+                      }
+                    });
+                    Object.keys(data[indicator]).forEach(key => {
+                      if (key.search('Q') === -1) {
+                        delete data[indicator][key];
+                      }
+                    } )
+                  }
 
                   if (keysAreGeos) {
                     // console.log(util.inspect(data, false, null, true));
@@ -438,12 +606,20 @@ const run = async () => {
                         source[category][geo] = {}
                       }
                       if (section) {
-                        source[category][geo][section] = data
+                        if (!source[category][geo][section]) {
+                          source[category][geo][section] = {}
+                        }
+                        source[category][geo][section][indicator] = data[indicator]
                       } else {
-                        source[category][geo] = data
+                        if (!source[category][geo]) {
+                          source[category][geo] = {}
+                        }
+                        source[category][geo][indicator] = data[indicator]
                       }
                     };
                   }
+
+                  // console.log('SOURCE', util.inspect(source, false, null, true));
 
                   updatedData = mergeObjects(
                     updatedData
@@ -458,8 +634,13 @@ const run = async () => {
             break;
           }
 
+          // Directly Inserts Data Into Designated Location
           case 'Direct': {
             console.log(config.type, 'Direct Update', config.update);
+            updatedData = mergeObjects(
+              structuredClone(dataFromDB.data),
+              config.update
+            )
             break;
           }
 
@@ -474,15 +655,20 @@ const run = async () => {
           (config.type === 'Direct' && config.update)
         ) {
           console.log('NEW DATA');
-          const updateObject = config.type === 'Direct'
-            ? {
-              ...config.update,
-              updatedOn: new Date()
-            }
-            : {
-              data: updatedData,
-              updatedOn: new Date()
-            }
+          const updateObject = {
+            data: updatedData,
+            updatedOn: new Date()
+          }
+
+          // config.type === 'Direct'
+          //   ? {
+          //     ...config.update,
+          //     updatedOn: new Date()
+          //   }
+          //   : {
+          //     data: updatedData,
+          //     updatedOn: new Date()
+          //   }
 
           await dataCollection.findOneAndUpdate(
             { project: config.project },
