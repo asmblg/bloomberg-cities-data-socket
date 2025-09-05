@@ -1,4 +1,4 @@
-// const util = require('util');
+const util = require('util');
 // const { coordAll } = require('@turf/turf');
 // const { getProjectData, updateProjectData } = require('../../globalUtils/API');
 const { 
@@ -30,7 +30,8 @@ const OneDriveSocket = async ({
   fileType,
   // db,
   clientID,
-  clientSecret
+  clientSecret,
+  delimiter
 }) => {
   const { access_token: msGraphToken } = await getToken({clientID, clientSecret});
   const filesInDirectory = await fetchFromOneDrive({
@@ -65,6 +66,8 @@ const OneDriveSocket = async ({
     })
 
   if (files?.[0]) {
+
+    // console.log(fileQuery, files);
 
     let result = {};
 
@@ -104,14 +107,28 @@ const OneDriveSocket = async ({
         const worksheet = await fetchFromOneDrive({
           file: file.id,
           sheet: sheetName,
-          accessToken: msGraphToken
+          accessToken: msGraphToken,
+          fileType
         });
-
-        // console.log(worksheet.length);
-
 
         result = processData({mappings, worksheet});
         // console.log('processed:', result);
+      }
+
+      if (fileType === 'CSV') {
+        const worksheet = await fetchFromOneDrive({
+          file: file.id,
+          accessToken: msGraphToken,
+          fileType,
+          delimiter: delimiter || ','
+        });
+
+        console.log('worksheet:', worksheet);
+
+        // console.log('Worksheet:', util.inspect(worksheet, false, null, true));
+
+        result = processData({mappings, worksheet});
+        // console.log('Processed:', util.inspect(result, false, null, true));
       }
 
     };

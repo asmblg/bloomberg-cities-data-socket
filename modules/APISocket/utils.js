@@ -1,4 +1,6 @@
 const axios = require('axios');
+const { get } = require('lodash');
+const { format } = require('path');
 const util = require('util');
 
 const getCensusData = async ({url, query}) => {
@@ -36,6 +38,7 @@ const getBLSData = async ({url, tables}) => {
     }
   });
 
+
   for await (seriesIDs of bufferedArrays) {
     
     const payload = {
@@ -49,6 +52,10 @@ const getBLSData = async ({url, tables}) => {
       header: 'Content-Type= application/json',
       data: payload
     });
+
+    console.log(util.inspect(data, false, null, true));
+    console.log('-------------------');
+    console.log(url, payload);
   
     if (data?.Results) {
       const {series} = data.Results;
@@ -121,6 +128,43 @@ const getBLSData = async ({url, tables}) => {
   return result;
 };
 
+const getINEData = async ({url, query}) => {
+  // const queryKeys = Object.keys(query);
+  // let queryString = '';
+
+  // if (queryKeys[0]) {
+  //   queryKeys.forEach(
+  //     (key, i) => (queryString += i === 0 ? `${key}=${query[key]}` : `&${key}=${query[key]}`)
+  //   );
+  // }
+
+  const { data } = await axios({
+    method: 'get',
+    url: url,
+    maxBodyLength: Infinity,
+    params: query
+  });
+
+  const { Dados } = data[0];
+
+  const formattedData = {};
+  
+  Object.entries(Dados).forEach(([key, value]) => {
+    formattedData[key] = value || null;
+  });
+
+  return formattedData;
+}
+
+const getESRIData = async ({url, query}) => {
+  const { data } = await axios({
+    method: 'get',
+    url: url,
+    params: query
+  });
+
+  return data;
+}
 
 
-module.exports = { getCensusData, getBLSData };
+module.exports = { getCensusData, getBLSData, getINEData, getESRIData };

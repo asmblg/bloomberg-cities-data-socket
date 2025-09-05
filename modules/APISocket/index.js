@@ -1,6 +1,8 @@
 const { 
   getCensusData, 
   getBLSData ,
+  getINEData,
+  getESRIData
   // mapInNewData 
 } = require('./utils');
 
@@ -10,8 +12,13 @@ const APISocket = async (config) => {
     case 'CensusAPI':
       return await getCensusData(config);
     case 'BLS API':
-      return await getBLSData(config);
-  
+      return await getBLSData(config);  
+    case 'INE API':
+      return await getINEData(config);
+    case 'ESRI API':
+      return await getESRIData(config);
+    default:
+      return null;
   }
 
   // // Get project id and data object from DB
