@@ -57,9 +57,10 @@ const run = async () => {
       scheduleDate: { $lte: new Date() },
       processedDate: { $exists: false },
       deactivated: { $exists: false },
-      source: 'Alignable',
+      // runFirst: true
+      // source: 'Alignable',
       // source: 'Alignable'
-      // type: "BLS API"
+      // source: "JLL"
       // type: "SafeGraph Subareas",
       // fileName: 'JLL_Q32024'
       // rawDataUpdateConfig: {$exists: true}
@@ -351,7 +352,8 @@ const run = async () => {
                     indicator,
                     labelCalc,
                     groupCalc,
-                    year
+                    year,
+                    overwriteAt
                   }
                 }) => {
 
@@ -411,7 +413,7 @@ const run = async () => {
 
                       if (keysAreGeos?.total?.label) {
                         const total = {};
-                        console.log('INDICATORS OBJECT', util.inspect(indicatorsObject, false, null, true));
+                        // console.log('INDICATORS OBJECT', util.inspect(indicatorsObject, false, null, true));
                        Object.values(indicatorsObject).forEach((value) => {
                           Object.entries(value).forEach(([key, val]) => {
                             if (!total[key]) {
@@ -426,7 +428,7 @@ const run = async () => {
                             })
                           })
                         })
-                        console.log('TOTAL', total); 
+                        // console.log('TOTAL', total); 
                         indicatorsObject[keysAreGeos.total.label] = total;
                       }
 
@@ -522,13 +524,14 @@ const run = async () => {
                   };
                   
 
-                  console.log('SOURCE', util.inspect(source, false, null, true));
+                  // console.log('SOURCE', util.inspect(source, false, null, true));
 
                   updatedData = mergeObjects(
                     updatedData
                       ? updatedData
                       : structuredClone(dataFromDB.data),
-                    source
+                    source,
+                    overwriteAt
                   )
                 })
               }

@@ -130,24 +130,22 @@ const ToMongoDB = async ({
           }
         };
 
-        // console.log(obj);
 
-        if (updateQueryFields) {
-          const updateQuery = {};
+        // if (updateQueryFields) {
+        //   const updateQuery = {};
 
-          updateQueryFields.forEach(key =>
-            updateQuery[key] = obj[key]
-          );
-          await collection.findOneAndUpdate(
-            updateQuery,
-            { $set: { ...obj, source_directory: sourceDirectory } },
-            { upsert: true }
-          )
-        } else {
+        //   updateQueryFields.forEach(key =>
+        //     updateQuery[key] = obj[key]
+        //   );
+        //   await collection.findOneAndUpdate(
+        //     updateQuery,
+        //     { $set: { ...obj, source_directory: sourceDirectory } },
+        //     { upsert: true }
+        //   )
+        // } else {
           obj.source_directory = sourceDirectory
           await collection.insertOne(obj);
-        }
-
+        // }
 
         inserted++
       };
@@ -161,8 +159,8 @@ const ToMongoDB = async ({
     });
     stream.on('end', async () => {
       console.log(`${total} total documents processed...${inserted} inserted.`);
-      await unlink(filePath);
-      setTimeout(() => resolve(console.log('Deleted...', filePath)), 1000);
+      // await unlink(filePath);
+      setTimeout(() => resolve(console.log('Done (Delete Disabled)...', filePath)), 1000);
     });
     stream.on('error', (err) => {
       throw err;
@@ -170,8 +168,6 @@ const ToMongoDB = async ({
   });
 
 };
-
-
 
 const deleteRecords = async ({ query, dbName, collectionName }) => {
   const url = 'mongodb://127.0.0.1:27017';
@@ -373,7 +369,6 @@ const safegraphDataToDB = async (config) => {
     await client.close();
   }
 };
-
 
 const updateDataDashboard = async config => {
   const {
