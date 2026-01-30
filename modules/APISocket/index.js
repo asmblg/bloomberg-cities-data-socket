@@ -1,8 +1,11 @@
+const { get } = require('lodash');
 const { 
   getCensusData, 
   getBLSData ,
   getINEData,
-  getESRIData
+  getESRIData,
+  getDataCubeData,
+  getEurostatData
   // mapInNewData 
 } = require('./utils');
 
@@ -17,6 +20,11 @@ const APISocket = async (config) => {
       return await getINEData(config);
     case 'ESRI API':
       return await getESRIData(config);
+    case 'DataCube':
+      return await getDataCubeData(config);
+    case 'Eurostat API':
+      return await getEurostatData(config);
+      return null;
     default:
       return null;
   }

@@ -21,6 +21,7 @@ const OneDriveSocket = async ({
   // project,
   sheetName,
   mappings,
+  mapping,
   fileName,
   fileQuery,
   directoryID,
@@ -111,7 +112,9 @@ const OneDriveSocket = async ({
           fileType
         });
 
-        result = processData({mappings, worksheet});
+        result = processData({
+          mappings: mappings || [mapping],
+          worksheet});
         // console.log('processed:', result);
       }
 
@@ -127,13 +130,19 @@ const OneDriveSocket = async ({
 
         // console.log('Worksheet:', util.inspect(worksheet, false, null, true));
 
-        result = processData({mappings, worksheet});
+        result = processData({
+          mappings: mappings || [mapping], 
+          worksheet
+          });
         // console.log('Processed:', util.inspect(result, false, null, true));
       }
 
     };
 
-    result = runCalculations({mappings, result})
+    result = runCalculations({
+      mappings: mappings || [mapping], 
+      result
+    })
     // console.log('calculated:', result);
     return result;
 

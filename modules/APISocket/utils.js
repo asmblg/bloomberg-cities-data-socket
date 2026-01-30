@@ -156,6 +156,15 @@ const getINEData = async ({url, query}) => {
   return formattedData;
 }
 
+const getDataCubeData = async ({url, dimensions, lang}) => {
+  const { data } = await axios({
+    method: 'get',
+    url: `${url}${dimensions.join('/')}?lang=${lang || 'en'}&type=json`,
+  });
+
+  return data;
+}
+
 const getESRIData = async ({url, query}) => {
   const { data } = await axios({
     method: 'get',
@@ -166,5 +175,20 @@ const getESRIData = async ({url, query}) => {
   return data;
 }
 
+const getEurostatData = async ({url, query}) => {
+  const { data } = await axios({
+    method: 'get',
+    url: url,
+    params: query || {}
+  });
 
-module.exports = { getCensusData, getBLSData, getINEData, getESRIData };
+  return data;
+}
+
+module.exports = { 
+  getCensusData,
+  getBLSData,
+  getINEData,
+  getESRIData,
+  getDataCubeData,
+  getEurostatData };

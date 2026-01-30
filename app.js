@@ -14,7 +14,7 @@ const {
 const {
   APISocket,
   WebDriverSocket,
-  SafeGraphSocket,
+  // SafeGraphSocket,
   GoogleSheetSocket,
   OneDriveSocket,
   AWS_S3_Sync
@@ -74,11 +74,10 @@ const run = async () => {
       ? await getDataSocketConfig(socketCollection, socketQuery)
       : require(process.env.LOCAL_SOCKET_PATH);
 
-    console.log('Number of Sockets to Run:', dataSocketConfigs.length)
+    console.log('Number of Sockets to Run:', dataSocketConfigs)
 
     // Execute data socket by data socket type
     for await (config of dataSocketConfigs
-      // .filter((obj, i) => i === 2)
       .sort((a, b) => {
         if (a.runFirst && !b.runFirst) {
           return -1;
@@ -205,97 +204,7 @@ const run = async () => {
 
             break;
           }
-          // FOR SAFEGRAPH       
-          case 'SafeGraph': {
-            const data = await SafeGraphSocket({
-              dbURI: process.env.SAFEGRAPH_DB_URI,
-              ...config
-            });
 
-            if (data) {
-
-              const {
-                section,
-                geotype,
-                category,
-                indicator
-              } = config.dashboardDataUpdate.mapping;
-
-              updatedData = mergeObjects(
-                structuredClone(dataFromDB.data),
-                {
-                  [section]: {
-                    [geotype]: {
-                      [category]: {
-                        [indicator]: { ...data }
-                      }
-                    }
-                  }
-                }
-              )
-
-            } else if (config.rawDataUpdate) {
-              console.log('Done!')
-            };
-
-            break;
-          }
-          case 'SafeGraph Subareas': {
-            const subareaGeoJSON = await geoCollection.findOne({
-              project: config.project,
-              geoType: config.geoType
-            });
-
-            if (subareaGeoJSON.type === 'FeatureCollection' && config.dashboardDataUpdate) {
-              for await (feature of subareaGeoJSON.features) {
-                const aggregationPipeline = [...config.dashboardDataUpdate.aggregationPipeline]
-                const geometry = feature.geometry;
-                const name = feature.properties[config.nameField];
-                const matchingObject = {
-                  "$match": {
-                    "geometry": {
-                      "$geoWithin": {
-                        "$geometry": geometry
-                      }
-                    }
-                  }
-                };
-                aggregationPipeline.unshift(matchingObject);
-
-                config.dashboardDataUpdate.aggregationPipeline = aggregationPipeline;
-
-                const data = await SafeGraphSocket({
-                  dbURI: process.env.SAFEGRAPH_DB_URI,
-                  ...config
-                });
-
-                config.dashboardDataUpdate.aggregationPipeline = aggregationPipeline.slice(1);
-
-                if (data) {
-
-                  const { section, geotype, category, indicator } = config.dashboardDataUpdate.mapping;
-
-                  updatedData = mergeObjects(
-                    updatedData
-                      ? { ...updatedData }
-                      : structuredClone(dataFromDB.data),
-                    {
-                      [section]: {
-                        [geotype]: {
-                          [name]: {
-                            [category]: {
-                              [indicator]: { ...data }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  )
-                }
-              }
-            }
-            break;
-          }
           // FOR JLL, ALIGNABLE, DEALROOM, and LIGHTCAST -- ALIGNABLE PDF IN DEVELOPMENT
           case 'OneDrive': {
             config.clientID = process.env.MS_CLIENT_ID;
@@ -304,7 +213,7 @@ const run = async () => {
             const data = await OneDriveSocket(config);
             // console.log('ONE DRIVE DATA', util.inspect(data, false, null, true));
 
-            const { mappings } = config;
+            const { mappings, mapping } = config;
 
             if (data) {
               if (config.mapToGeo) {
@@ -343,7 +252,7 @@ const run = async () => {
 
               } else {
 
-                mappings.forEach(({
+                [...mappings || [mapping]].forEach(({
                   destination: {
                     category,
                     geo,
@@ -353,7 +262,13 @@ const run = async () => {
                     labelCalc,
                     groupCalc,
                     year,
+                    targetKey,
+                    totalKey,
                     overwriteAt
+                  },
+                  origin: {
+                    allColumns,
+                    rowKey,
                   }
                 }) => {
 
@@ -413,22 +328,28 @@ const run = async () => {
 
                       if (keysAreGeos?.total?.label) {
                         const total = {};
-                        // console.log('INDICATORS OBJECT', util.inspect(indicatorsObject, false, null, true));
-                       Object.values(indicatorsObject).forEach((value) => {
+                        Object.values(indicatorsObject).forEach((value) => {
                           Object.entries(value).forEach(([key, val]) => {
-                            if (!total[key]) {
-                              total[key] = {};
-                            } 
-                            Object.entries(val).forEach(([k, v]) => {
-                              if (!total[key][k]) {
-                                total[key][k] = v;
-                              } else {
-                                total[key][k] += v;
+                            if (val && typeof val === 'object') {
+                              if (!total[key]) {
+                                total[key] = {};
                               }
-                            })
+                              Object.entries(val).forEach(([k, v]) => {
+                                if (!total[key][k]) {
+                                  total[key][k] = v;
+                                } else {
+                                  total[key][k] += v;
+                                }
+                              })
+                            } else {
+                              if (!total[key]) {
+                                total[key] = val;
+                              } else {
+                                total[key] += val;
+                              }
+                            }
                           })
                         })
-                        // console.log('TOTAL', total); 
                         indicatorsObject[keysAreGeos.total.label] = total;
                       }
 
@@ -454,49 +375,51 @@ const run = async () => {
                           [indicator]: value
                         }
                       })
+
+
                     }
 
                     if (keysAreGeos.flipNestedDepth) {
-                        const obj = source;
-                        
+                      const obj = source;
+
                       // function invertAtDepths(obj, depths = [6, 7]) {
-                        const parentDepth = keysAreGeos.flipNestedDepth || 1;
-                      
-                        const walk = (node, depth) => {
-                          if (depth === parentDepth && typeof node === 'object') {
-                            const inverted = {};
-                      
-                            for (const parentKey in node) {
-                              const children = node[parentKey];
-                      
-                              if (typeof children === 'object') {
-                                for (const childKey in children) {
-                                  if (!inverted[childKey]) inverted[childKey] = {};
-                                  inverted[childKey][parentKey] = children[childKey];
-                                }
-                              } else {
-                                // If it's not an object, just copy as-is
-                                inverted[parentKey] = children;
+                      const parentDepth = keysAreGeos.flipNestedDepth || 1;
+
+                      const walk = (node, depth) => {
+                        if (depth === parentDepth && typeof node === 'object') {
+                          const inverted = {};
+
+                          for (const parentKey in node) {
+                            const children = node[parentKey];
+
+                            if (typeof children === 'object') {
+                              for (const childKey in children) {
+                                if (!inverted[childKey]) inverted[childKey] = {};
+                                inverted[childKey][parentKey] = children[childKey];
                               }
+                            } else {
+                              // If it's not an object, just copy as-is
+                              inverted[parentKey] = children;
                             }
-                      
-                            return inverted;
                           }
-                      
-                          // Recurse deeper if not yet at swap depth
-                          if (typeof node === 'object' && node !== null) {
-                            const result = Array.isArray(node) ? [] : {};
-                            for (const key in node) {
-                              result[key] = walk(node[key], depth + 1);
-                            }
-                            return result;
-                          }
-                      
-                          return node; // Primitive value
+
+                          return inverted;
                         }
-                        
-                        const invertedData = walk(obj, 1);
-                        source = invertedData;
+
+                        // Recurse deeper if not yet at swap depth
+                        if (typeof node === 'object' && node !== null) {
+                          const result = Array.isArray(node) ? [] : {};
+                          for (const key in node) {
+                            result[key] = walk(node[key], depth + 1);
+                          }
+                          return result;
+                        }
+
+                        return node; // Primitive value
+                      }
+
+                      const invertedData = walk(obj, 1);
+                      source = invertedData;
                       // }
                     }
 
@@ -520,11 +443,24 @@ const run = async () => {
                         : data[indicator]
                     }
                   } else if (indicator) {
-                    source[category] = {[indicator]: data[indicator] }
+                    source[category] = { [indicator]: data[indicator] }
                   };
-                  
 
-                  // console.log('SOURCE', util.inspect(source, false, null, true));
+                  if (targetKey) {
+                    const targetKeyArray = targetKey.split('.');
+                    if (totalKey && !allColumns) {
+                      const totalObject = {};
+                      Object.values(data['undefined']).forEach((value) => {
+                        Object.entries(value).forEach(([key, val]) => {
+                          totalObject[key] = totalObject[key] ? totalObject[key] + val : val; 
+                        })
+                      });
+                      data['undefined'][totalKey] = totalObject;
+                    }
+                    source = createNestedObject(targetKeyArray, !allColumns ? data['undefined'] : rowKey ? data[rowKey] : data);
+                  }
+
+                  console.log('SOURCE', util.inspect(source, false, 4, true));
 
                   updatedData = mergeObjects(
                     updatedData
@@ -551,41 +487,13 @@ const run = async () => {
           // Vodafone Raw Data and Aggregation
           case 'Vodafone-Raw': {
             const vodafoneCollection = db.collection('vodafone');
-            const axios = require('axios');
             const fs = require('fs');
             const path = require('path');
 
-            const url = 'https://coiapp2.cm-lisboa.pt/file/datahub/6ded279e-3c85-4ce2-9fab-0324256f41a7';
-            const username = process.env.VODAFONE_USERNAME;
-            const password = process.env.VODAFONE_PASSWORD;
-
-            const timestamp = new Date().toISOString().replace(/:/g, '_').replace(/\./g, '_');
-            const filename = 'voda_2025_06.csv' // `vodafone_data_${timestamp}.csv`; //'voda_2025_mar.csv'
+            const filename = 'voda_2025_7_8_9.csv' // `vodafone_data_${new Date().toISOString().replace(/:/g, '_').replace(/\./g, '_')}.csv`;
             const filePath = path.resolve(__dirname, 'data', 'vodafone', filename);
 
-            const downloadFile = async (url, username, password) => {
-              const response = await axios({
-                url,
-                method: 'GET',
-                responseType: 'stream',
-                auth: {
-                  username,
-                  password
-                }
-              });
-
-              const writer = fs.createWriteStream(filePath);
-
-              response.data.pipe(writer);
-
-              return new Promise((resolve, reject) => {
-                writer.on('finish', resolve);
-                writer.on('error', reject);
-              });
-            };
-
             const createAggregatedData = async () => {
-
               const readline = require('readline');
               const stream = fs.createReadStream(filePath);
               const rl = readline.createInterface({
@@ -593,6 +501,7 @@ const run = async () => {
                 crlfDelay: Infinity
               });
 
+              // Use running aggregates (sums, counts, max) to avoid storing large arrays in memory
               const aggregatedRawData = {};
 
               rl.on('line', (line) => {
@@ -608,13 +517,13 @@ const run = async () => {
                   return;
                 }
 
-                const total = parseInt(totalString);
-                const roaming = parseInt(roamingString);
+                const total = Number.parseInt(totalString, 10);
+                const roaming = Number.parseInt(roamingString, 10);
 
-                if (grid && dateTime && total >= 0 && roaming >= 0) {
+                if (grid && dateTime && Number.isFinite(total) && Number.isFinite(roaming)) {
                   const date = dateTime.split(' ')[0]?.replace(/"/g, '');
                   const time = dateTime.split(' ')[1]?.replace(/"/g, '');
-  
+
                   const timeOfDay = () => {
                     if (time > '00:00' && time <= '06:00') {
                       return 'madrugada';
@@ -629,67 +538,60 @@ const run = async () => {
                     }
                   }
 
-                  if (!aggregatedRawData[grid]) {
-                    aggregatedRawData[grid] = {};
-                  }
-                  if (!aggregatedRawData[grid][date]) {
-                    aggregatedRawData[grid][date] = {};
-                  }
-                  if (!aggregatedRawData[grid][date][timeOfDay()]) {
+                  const tod = timeOfDay();
 
-                    aggregatedRawData[grid][date][timeOfDay()] = {
-                      total: [total],
-                      roaming: [roaming]
-                    }
+                  if (!aggregatedRawData[grid]) aggregatedRawData[grid] = {};
+                  if (!aggregatedRawData[grid][date]) aggregatedRawData[grid][date] = {};
+                  if (!aggregatedRawData[grid][date][tod]) {
+                    aggregatedRawData[grid][date][tod] = {
+                      totalSum: total,
+                      roamingSum: roaming,
+                      maxTotal: total,
+                      maxRoaming: roaming,
+                      countTotal: 1,
+                      countRoaming: 1
+                    };
                   } else {
-                    aggregatedRawData[grid][date][timeOfDay()].total.push(total);
-                    aggregatedRawData[grid][date][timeOfDay()].roaming.push(roaming);
+                    const slot = aggregatedRawData[grid][date][tod];
+                    slot.totalSum += total;
+                    slot.roamingSum += roaming;
+                    slot.countTotal += 1;
+                    slot.countRoaming += 1;
+                    if (total > slot.maxTotal) slot.maxTotal = total;
+                    if (roaming > slot.maxRoaming) slot.maxRoaming = roaming;
                   }
                 }
               });
 
-              return await new Promise((resolve) =>
+              return await new Promise((resolve, reject) => {
                 rl.on('close', () => {
                   const aggregatedData = [];
-                  // console.log('AGGREGATED RAW DATA', util.inspect(aggregatedRawData, false, null, true));
                   Object.entries(aggregatedRawData).forEach(([grid, gridData]) => {
                     Object.entries(gridData).forEach(([date, dateData]) => {
-                      const object = {
-                        grid,
-                        date,
-                      };
-                      Object.entries(dateData).forEach(([timeOfDay, timeData]) => {
-                        const averageTotal = timeData.total.reduce((acc, curr) => acc + curr, 0) / timeData.total.length;
-                        const averageRoaming = timeData.roaming.reduce((acc, curr) => acc + curr, 0) / timeData.roaming.length;
-                        const maxTotal = Math.max(...timeData.total);
-                        const maxRoaming = Math.max(...timeData.roaming);
-                        const countTotal = timeData.total.length;
-                        const countRoaming = timeData.roaming.length;
+                      const object = { grid, date };
+                      Object.entries(dateData).forEach(([timeOfDay, stats]) => {
+                        const averageTotal = stats.countTotal ? (stats.totalSum / stats.countTotal) : 0;
+                        const averageRoaming = stats.countRoaming ? (stats.roamingSum / stats.countRoaming) : 0;
                         object[timeOfDay] = {
-                          // grid,
-                          // date,
-                          // timeOfDay,
                           averageTotal,
                           averageRoaming,
-                          maxTotal,
-                          maxRoaming,
-                          countTotal,
-                          countRoaming
+                          maxTotal: stats.maxTotal,
+                          maxRoaming: stats.maxRoaming,
+                          countTotal: stats.countTotal,
+                          countRoaming: stats.countRoaming
                         };
                       });
                       aggregatedData.push(object);
                     });
                   });
-                  // console.log('AGGREGATED DATA SAMPLE', util.inspect(aggregatedData[0], false, null, true));
                   resolve(aggregatedData);
-                }
-                ));
+                });
+                rl.on('error', (err) => reject(err));
+                stream.on('error', (err) => reject(err));
+              });
             };
 
             try {
-              // await downloadFile(url, username, password);
-              // console.log('File downloaded successfully');
-              
               // PROCESS FILE INTO DATABASE
               const getMaxInsertDate = async () => {
                 const maxDate = await vodafoneCollection.find().sort({ date: -1 }).limit(1).toArray();
@@ -700,9 +602,9 @@ const run = async () => {
               const aggregatedData = await createAggregatedData()
                 .then(data =>
                   data.filter(obj =>
-                    maxInsertDate 
-                    ? new Date(obj.date) > new Date(maxInsertDate)
-                    : true
+                    maxInsertDate
+                      ? new Date(obj.date) > new Date(maxInsertDate)
+                      : true
                   )
                 );
 
@@ -726,7 +628,7 @@ const run = async () => {
                 console.log('No new data to insert');
               }
             } catch (error) {
-              console.error('Error downloading the file:', error);
+              console.error('Error processing the file:', error);
             }
 
             break;
@@ -872,11 +774,11 @@ const run = async () => {
           }
           case 'INE API': {
             const data = await APISocket(config);
-            console.log('INE DATA', config.description ,util.inspect(data, false, null, true));
+            console.log('INE DATA', config.description, util.inspect(data, false, null, true));
             const formattedData = {};
             const { mapping } = config;
             const targetKeyArray = mapping?.targetKey?.split('.') || [];
-            
+
             Object.entries(data).forEach(([key, rawValue]) => {
               const value = !mapping?.origin?.groupField
                 ? Number(rawValue[0]?.valor)
@@ -941,7 +843,7 @@ const run = async () => {
             });
 
             if (mapping?.origin?.groupField) {
-              Object.entries({...formattedData}).forEach(([key, value]) => {
+              Object.entries({ ...formattedData }).forEach(([key, value]) => {
                 Object.entries(value).forEach(([groupKey, groupValue]) => {
                   if (!formattedData[groupKey]) {
                     formattedData[groupKey] = {};
@@ -972,6 +874,86 @@ const run = async () => {
               structuredClone(dataFromDB.data),
               mappedData
             )
+            break;
+          }
+          // FOR SLOVAK STATISTICAL OFFICE DATA CUBE
+          case 'DataCube': {
+            const data = await APISocket(config);
+            console.log('DataCube DATA', config.description, util.inspect(data, false, null, true));
+            const formattedData = {};
+            const { mapping } = config;
+            const targetKeyArray = mapping?.targetKey?.split('.') || [];
+            // console.log(config.description, ':', mapping);
+
+            const yearIndices = { ...data?.dimension?.[mapping?.origin?.yearKey]?.category?.index || {} };
+            const quarterIndices = { ...data?.dimension?.[mapping?.origin?.quarterKey]?.category?.index || {} };
+            const categoryIndices = { ...data?.dimension?.[mapping?.origin?.categoryKey]?.category?.index || {} };
+            const quarterIndexCount = Object.keys(quarterIndices).length;
+            const categoryIndexCount = Object.keys(categoryIndices).length;
+
+            // console.log('YEAR INDICES', util.inspect(yearIndices, false, null, true));
+            // console.log('QUARTER INDICES', util.inspect(quarterIndices, false, null, true));
+
+            Object.entries(yearIndices).forEach(([year, yearIndex]) => {
+              if (quarterIndexCount > 0) {
+                Object.entries(quarterIndices).forEach(([quarter, quarterIndex]) => {
+                  if (mapping?.origin?.excludeKey && quarter !== mapping.origin.excludeKey || !mapping?.origin?.excludeKey) {
+                    const dataIndex = yearIndex * quarterIndexCount + quarterIndex;
+                    const value = data?.value?.[dataIndex] || null;
+                    const quarterKey = `${year}-Q${quarter.replace('Q', '')}`;
+                    if (value || value === 0) {
+                      formattedData[quarterKey] = value;
+                    }
+                  }
+                });
+              } else if (mapping?.origin?.categoryKey) {
+                Object.entries(categoryIndices).forEach(([category, categoryIndex]) => {
+                  if (mapping?.origin?.excludeKey && category !== mapping.origin.excludeKey || !mapping?.origin?.excludeKey) {
+                    const dataIndex = yearIndex * categoryIndexCount + categoryIndex;
+                    const value = data?.value?.[dataIndex] || null;
+                    const label = data?.dimension?.[mapping?.origin?.categoryKey]?.category?.label?.[category] || category;
+                    // const quarterKey = `${year}-Q${category.replace('Q', '')}`;
+                    if (value || value === 0) {
+                      if (!formattedData[label]) {
+                        formattedData[label] = {};
+                      }
+                      formattedData[label][year] = value;
+                    }
+                  }
+                });
+              } else {
+                const dataIndex = yearIndex;
+                const value = data?.value?.[dataIndex] || null;
+                const label = mapping?.origin?.categoryKey ? data?.dimension?.[mapping?.origin?.categoryKey]?.category?.label?.[yearIndex] : year;
+                if (value || value === 0) {
+                  formattedData[label] = value;
+                }
+              }
+            });
+
+            const mappedData = targetKeyArray[0]
+              ? createNestedObject(targetKeyArray, formattedData)
+              : {
+                [mapping.section]: {
+                  [mapping.geo]: {
+                    [mapping.indicator]: formattedData
+                  }
+                }
+              }
+
+            console.log('MAPPED DATA', util.inspect(mappedData, false, null, true));
+
+            updatedData = mergeObjects(
+              structuredClone(dataFromDB.data),
+              mappedData
+            )
+
+            break;
+          }
+
+          case 'Eurostat API': {
+            const data = await APISocket(config);
+            console.log('Eurostat DATA', config, util.inspect(data, false, null, true));
             break;
           }
           case 'ESRI API': {
@@ -1044,6 +1026,8 @@ const run = async () => {
           case 'AWS S3 SYNC': {
             // const { source, destination } = config;
             await AWS_S3_Sync(config);
+
+
             // UNZIP CSV.GZIP FILES IN EACH FOLDER
 
             // const { exec } = require('child_process');
@@ -1097,7 +1081,7 @@ const run = async () => {
 
             // const fs = require('fs');
             // const path = require('path');
-            // const directoryPath = path.join(__dirname, source);
+            // const directoryPath = './data/aws/top_employers' //path.join(__dirname, source);
             // fs.readdir(directoryPath, (err, files) => {
             //   if (err) {
             //     return console.log('Unable to scan directory: ' + err);
@@ -1129,7 +1113,7 @@ const run = async () => {
 
             // UPLOAD NEW CSVS TO ONEDRIVE DIRECTORY
 
-            
+
 
 
             break;
@@ -1149,17 +1133,6 @@ const run = async () => {
             data: updatedData,
             updatedOn: new Date()
           }
-
-          // config.type === 'Direct'
-          //   ? {
-          //     ...config.update,
-          //     updatedOn: new Date()
-          //   }
-          //   : {
-          //     data: updatedData,
-          //     updatedOn: new Date()
-          //   }
-
           await dataCollection.findOneAndUpdate(
             { project: config.project },
             { $set: updateObject },
@@ -1222,3 +1195,95 @@ run()
     console.log('\nExiting...\n');
     process.exit(1);
   });
+
+// FOR SAFEGRAPH       
+// case 'SafeGraph': {
+//   const data = await SafeGraphSocket({
+//     dbURI: process.env.SAFEGRAPH_DB_URI,
+//     ...config
+//   });
+
+//   if (data) {
+
+//     const {
+//       section,
+//       geotype,
+//       category,
+//       indicator
+//     } = config.dashboardDataUpdate.mapping;
+
+//     updatedData = mergeObjects(
+//       structuredClone(dataFromDB.data),
+//       {
+//         [section]: {
+//           [geotype]: {
+//             [category]: {
+//               [indicator]: { ...data }
+//             }
+//           }
+//         }
+//       }
+//     )
+
+//   } else if (config.rawDataUpdate) {
+//     console.log('Done!')
+//   };
+
+//   break;
+// }
+// case 'SafeGraph Subareas': {
+//   const subareaGeoJSON = await geoCollection.findOne({
+//     project: config.project,
+//     geoType: config.geoType
+//   });
+
+//   if (subareaGeoJSON.type === 'FeatureCollection' && config.dashboardDataUpdate) {
+//     for await (feature of subareaGeoJSON.features) {
+//       const aggregationPipeline = [...config.dashboardDataUpdate.aggregationPipeline]
+//       const geometry = feature.geometry;
+//       const name = feature.properties[config.nameField];
+//       const matchingObject = {
+//         "$match": {
+//           "geometry": {
+//             "$geoWithin": {
+//               "$geometry": geometry
+//             }
+//           }
+//         }
+//       };
+//       aggregationPipeline.unshift(matchingObject);
+
+//       config.dashboardDataUpdate.aggregationPipeline = aggregationPipeline;
+
+//       const data = await SafeGraphSocket({
+//         dbURI: process.env.SAFEGRAPH_DB_URI,
+//         ...config
+//       });
+
+//       config.dashboardDataUpdate.aggregationPipeline = aggregationPipeline.slice(1);
+
+//       if (data) {
+
+//         const { section, geotype, category, indicator } = config.dashboardDataUpdate.mapping;
+
+//         updatedData = mergeObjects(
+//           updatedData
+//             ? { ...updatedData }
+//             : structuredClone(dataFromDB.data),
+//           {
+//             [section]: {
+//               [geotype]: {
+//                 [name]: {
+//                   [category]: {
+//                     [indicator]: { ...data }
+//                   }
+//                 }
+//               }
+//             }
+//           }
+//         )
+//       }
+//     }
+//   }
+//   break;
+// }

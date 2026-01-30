@@ -84,7 +84,7 @@ const fetchFromOneDrive = async ({
         res.on("end", () => {
 
           const body = Buffer.concat(chunks);
-          const json = JSON.parse(body.toString());
+          const json = JSON.parse(body.toString().replace(/[ºª]/g, '')); // Remove the characters
 
           if (json.error) {
             throw new Error(json.error.message || "Request error");
@@ -288,8 +288,14 @@ const processData = ({ mappings, worksheet }) => {
         valueFormatter,
         valueConverter,
         startRowOffset,
+        sliceIndex,
         replaceZeroWith,
-        wholeTable
+        wholeTable,
+        allColumns,
+        columnKeyFormatter,
+        mergeHeaderRows,
+        excludeColumnMatch
+        
       },
       destination: {
         indicator,
@@ -301,10 +307,8 @@ const processData = ({ mappings, worksheet }) => {
     let startRowIndex = null;
     let endRowIndex = null;
 
-    const headerRow = worksheet[0]
-      .map(cell => `${cell}`.toLowerCase()
-        // .toLocaleLowerCase()
-        .trim());
+    const headerRow = worksheet[sliceIndex ? sliceIndex : 0]
+      .map(cell => `${cell}`.toLowerCase().trim());
 
     const labelIndex = labelField
       ? headerRow.indexOf(labelField?.toLowerCase()) > -1
@@ -344,10 +348,17 @@ const processData = ({ mappings, worksheet }) => {
       endRowIndex = startRowIndex + rowCount
     };
 
+    
+
     // console.log({
     //   startRowIndex,
     //   endRowIndex
     // })
+
+    if (sliceIndex) {
+      startRowIndex = sliceIndex + 1;
+      // endRowIndex = sliceIndex[1];
+    }
 
     const slicedRows = startRowIndex && endRowIndex
       ? worksheet.slice(startRowIndex, endRowIndex)
@@ -386,7 +397,7 @@ const processData = ({ mappings, worksheet }) => {
             : true
         : true)
       .forEach(row => {
-        if (!wholeTable){
+        if (!wholeTable && !allColumns) {
         // console.log(row);
         const countUniqueValue = row[countUniqueIndex];
 
@@ -442,7 +453,7 @@ const processData = ({ mappings, worksheet }) => {
             const [quarter, year] = string.split('Trimestre');
             return `${year.trim()}-Q${quarter.trim()}`;
           }
-
+          
           return string
         };
 
@@ -516,7 +527,7 @@ const processData = ({ mappings, worksheet }) => {
             }
           }
         }
-        } else {
+        } else if (wholeTable) {
           const tableArray = [];
           slicedRows.forEach(row => {
             const rowObj = {};
@@ -530,6 +541,60 @@ const processData = ({ mappings, worksheet }) => {
           })
           result[indicator] = tableArray;
 
+        } else if (allColumns) {
+          // console.log('All columns processing');
+          // console.log(row);
+          const label = row[labelIndex]?.toString()?.trim();
+          result[label] = {};
+          // console.log('Heasder Row', headerRow);
+          headerRow.forEach((h, i) => {
+            let header = h;
+            if (mergeHeaderRows) {
+              const header2 = worksheet[sliceIndex ? (sliceIndex + mergeHeaderRows)  : mergeHeaderRows][i]
+              if (header2 && header2 !== '') {
+                header = `${header}${header2}`.trim();
+              }
+            }
+            header = header.trim();
+            // console.log({header, i});
+            if (i !== labelIndex && header) {
+              let value = Number(row[i] || 0);
+
+              if (valueConverter === '0,00 => 0.00' && row?.[i]) {
+                value = Number(row?.[i]?.split(',').join('.')) || null
+              }
+
+              if (
+                replaceZeroWith && 
+                (!value || row?.[i] === 0 || row?.[i] === '0' || !row?.[i] || row?.[i] === '0.00' || row?.[i] === '0,00' || row?.[i] === '0.0000' || row?.[i] === 'NA' || row?.[i] === 'NA\r' )
+              ) {
+                value = replaceZeroWith
+              }
+
+              if (valueFormatter && !isNaN(parseInt(value))) {
+                if (valueFormatter === '%') {
+                  value = `${numeral(Number(value)).format('0.0')}%`
+                } else {
+                  value = numeral(Number(value)).format(valueFormatter)
+                }
+              }
+              
+              if (excludeColumnMatch && header.search(excludeColumnMatch) !== -1) {
+                return;
+              } else if (columnKeyFormatter === 'YYYYQQ >> YYYY-QQ') {
+                const quarter = header.slice(-1);
+                const year = header.slice(0, 4);
+                result[label][`${year}-Q${quarter}`] = value;
+              } else if (columnKeyFormatter === 'YYYY#Q >> YYYY-QQ') {
+                const quarter = header[4];
+                const year = header.slice(0, 4);
+                result[label][`${year}-Q${quarter}`] = value;
+              } else {
+                result[label][header] = value;
+              }
+
+            }
+          })
         }
     })
   });

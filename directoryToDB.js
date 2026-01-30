@@ -58,7 +58,7 @@ async function main(rootFilePath, collectionName, scheduleDate) {
 }
 
 main(
-  './configs/schedule', //FROM HERE
+  './configs/lisboa/quarterly', //FROM HERE
   'sockets', //TO HERE,
-  '2024-05-02' //DEFAULT SCHEDULE DATE IF NOT SET BY CONFIG
+  '2026-01-15' //DEFAULT SCHEDULE DATE IF NOT SET BY CONFIG
 );

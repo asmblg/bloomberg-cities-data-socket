@@ -42,7 +42,6 @@
     "qs": "^6.11.0",
     "shapefile-to-geojson": "^1.0.1",
     "tesseract.js": "^4.0.2",
-    "turf": "^3.0.14",
-    "zlib": "^1.0.5"
+    "turf": "^3.0.14"
   }
 }
