@@ -99,7 +99,7 @@ const fetchFromOneDrive = async ({
     }
 
     if (fileType === 'CSV') {
-      
+
       axios
         .get(url, options)
         .then((response) => {
@@ -222,8 +222,56 @@ const formatLabel = ({ label, labelFormatter }) => {
   if (labelFormatter === 'YYYY QQ M to YYYY-QQ') {
     const [year, quarter] = label.split(' ');
     if (year && quarter) {
-    return `${year}-${quarter}`;
+      return `${year}-${quarter}`;
     } return null
+  }
+
+  if (labelFormatter === 'YYYY, MMM to YYYY-QQ') {
+    const [year, month] = label.split(', ');
+    const monthMap = {
+      'January': 'Q1',
+      'February': 'Q1',
+      'March': 'Q1',
+      'April': 'Q2',
+      'May': 'Q2',
+      'June': 'Q2',
+      'July': 'Q3',
+      'August': 'Q3',
+      'September': 'Q3',
+      'October': 'Q4',
+      'November': 'Q4',
+      'December': 'Q4'
+    };
+    if (year && month) {
+      return `${year}-${monthMap[month]}`;
+    } else if (year) {
+      return `${year}-Q1`;
+    }
+
+    return null;
+  }
+
+  if (labelFormatter === 'YYYY, MMM to YYYY') {
+    const [year, month] = label.split(', ');
+    // const monthMap = {
+    //   'January': 'Q1',
+    //   'February': 'Q1',
+    //   'March': 'Q1',
+    //   'April': 'Q2',
+    //   'May': 'Q2',
+    //   'June': 'Q2',
+    //   'July': 'Q3',
+    //   'August': 'Q3',
+    //   'September': 'Q3',
+    //   'October': 'Q4',
+    //   'November': 'Q4',
+    //   'December': 'Q4'
+    // };
+    if (year) {
+      return year;
+    }
+
+    return null;
   }
 
   if (labelFormatter === 'mmm/YYYY to YYYY-QQ') {
@@ -241,6 +289,28 @@ const formatLabel = ({ label, labelFormatter }) => {
       'oct': 'Q4',
       'nov': 'Q4',
       'dec': 'Q4'
+    };
+    if (month && year) {
+      return `${year}-${monthMap[month]}`;
+    }
+    return null
+  }
+
+  if (labelFormatter === "M/D/YYYY to YYYY-QQ") {
+    const [month, day, year] = label.split('/');
+    const monthMap = {
+      '1': 'Q1',
+      '2': 'Q1',
+      '3': 'Q1',
+      '4': 'Q2',
+      '5': 'Q2',
+      '6': 'Q2',
+      '7': 'Q3',
+      '8': 'Q3',
+      '9': 'Q3',
+      '10': 'Q4',
+      '11': 'Q4',
+      '12': 'Q4'
     };
     if (month && year) {
       return `${year}-${monthMap[month]}`;
@@ -282,6 +352,7 @@ const processData = ({ mappings, worksheet }) => {
         groupConverter,
         countRows,
         nullGroup,
+        nullLabel,
         countUniqueField,
         countUniqueColumn,
         valueCalculator,
@@ -294,8 +365,11 @@ const processData = ({ mappings, worksheet }) => {
         allColumns,
         columnKeyFormatter,
         mergeHeaderRows,
-        excludeColumnMatch
-        
+        excludeColumnMatch,
+        labelCharacterRemove,
+        groupCharacterRemove,
+        extractValueFromRange
+
       },
       destination: {
         indicator,
@@ -307,37 +381,29 @@ const processData = ({ mappings, worksheet }) => {
     let startRowIndex = null;
     let endRowIndex = null;
 
-    const headerRow = worksheet[sliceIndex ? sliceIndex : 0]
-      .map(cell => `${cell}`.toLowerCase().trim());
+    // let headerRow = worksheet[sliceIndex ? sliceIndex : 0]
+    //   .map(cell => `${cell}`.toLowerCase().trim());
 
-    const labelIndex = labelField
-      ? headerRow.indexOf(labelField?.toLowerCase()) > -1
-        ? headerRow.indexOf(labelField?.toLowerCase())
-        : 0 // Assume first column if not specified 
-      : labelColumn;
-    const valueIndex = headerRow.indexOf(valueField?.toLowerCase()) > -1 ? headerRow.indexOf(valueField?.toLowerCase()) : valueColumn;
-    const groupIndex = headerRow.indexOf(groupField?.toLowerCase()) > -1 ? headerRow.indexOf(groupField?.toLowerCase()) : groupColumn;
-    const countUniqueIndex = headerRow.indexOf(countUniqueField?.toLowerCase()) > -1 ? headerRow.indexOf(countUniqueField?.toLowerCase()) : countUniqueColumn;
     const objectForCheckingUniqueCount = {};
 
     // console.log(mapping);
     // console.log('Row search', rowSearch);
     // console.log('Label Index', labelIndex)
-    if (rowSearch && (labelIndex || labelIndex === 0)) {
-      console.log('Searching for row', rowSearch);
+    if (rowSearch) {
+      // console.log('Searching for row', rowSearch);
       worksheet.forEach((row, i) => {
         row.forEach(cell => {
 
 
 
           if (`${cell}`.toLowerCase().search(rowSearch?.toLowerCase()) !== -1) {
-            console.log('Found', cell, rowSearch)
+            console.log('Found', cell)
             startRowIndex = i + (startRowOffset || 2);
           }
         })
         if (startRowIndex &&
           !endRowIndex &&
-          row[labelIndex] === endSearch &&
+          row[0] === endSearch &&
           i > startRowIndex) {
           endRowIndex = i
         }
@@ -348,7 +414,7 @@ const processData = ({ mappings, worksheet }) => {
       endRowIndex = startRowIndex + rowCount
     };
 
-    
+
 
     // console.log({
     //   startRowIndex,
@@ -360,11 +426,35 @@ const processData = ({ mappings, worksheet }) => {
       // endRowIndex = sliceIndex[1];
     }
 
+    const headerRowIndex = startRowIndex ? startRowIndex - 1 : 0;
+    // console.log({
+    //   worksheet,
+    //   headerRowIndex
+    // })
+
+    const headerRow = worksheet[headerRowIndex]
+      .map(cell => `${cell}`.toLowerCase().trim());
+
+    const labelIndex = labelField
+      ? headerRow.indexOf(labelField?.toLowerCase()) > -1
+        ? headerRow.indexOf(labelField?.toLowerCase())
+        : 0 // Assume first column if not specified 
+      : labelColumn;
+    const valueIndex = headerRow.indexOf(valueField?.toLowerCase()) > -1 ? headerRow.indexOf(valueField?.toLowerCase()) : valueColumn;
+    const groupIndex = headerRow.indexOf(groupField?.toLowerCase()) > -1 ? headerRow.indexOf(groupField?.toLowerCase()) : groupColumn;
+    const countUniqueIndex = headerRow.indexOf(countUniqueField?.toLowerCase()) > -1 ? headerRow.indexOf(countUniqueField?.toLowerCase()) : countUniqueColumn;
+
+
+
     const slicedRows = startRowIndex && endRowIndex
       ? worksheet.slice(startRowIndex, endRowIndex)
       : startRowIndex && !endRowIndex
         ? worksheet.slice(startRowIndex)
         : worksheet.slice(1);
+
+
+    // console.log('Header Row', headerRow);
+    // console.log('Sliced Rows', slicedRows)
 
     // console.log('Sliced Row Length', slicedRows.length)
 
@@ -376,7 +466,7 @@ const processData = ({ mappings, worksheet }) => {
       ? headerRow.indexOf(filter2?.field?.toLowerCase())
       : filter2?.column;
 
-      // console.log({filterIndex, filterIndex2, filter, filter2});
+    // console.log({filterIndex, filterIndex2, filter, filter2});
 
     slicedRows
       .filter(row => (labelIndex || labelIndex === 0) ? !excludeKeys?.includes(row[labelIndex]?.trim()) : true)
@@ -391,142 +481,185 @@ const processData = ({ mappings, worksheet }) => {
         ? filter2.value
           ? `${row[filterIndex2]}`?.trim() === filter2.value
           : filter2.values
-            ? filter2?.operation === 'exclude' 
+            ? filter2?.operation === 'exclude'
               ? !filter2.values.includes(row[filterIndex2]?.trim())
               : filter2.values.includes(row[filterIndex2]?.trim())
             : true
         : true)
       .forEach(row => {
+        // console.log('Processing row', row);
         if (!wholeTable && !allColumns) {
-        // console.log(row);
-        const countUniqueValue = row[countUniqueIndex];
+          // console.log(row);
+          const countUniqueValue = row[countUniqueIndex];
 
-        const label = labelIndex || labelIndex === 0
-          ? labelFormatter
-            ? formatLabel({
-              label: row[labelIndex]?.toString()?.trim(),
-              labelFormatter
-            })
-            : `${row[labelIndex]?.toString()?.trim()}`
-          : null;
-        let value = valueIndex
-          ? Number(row[valueIndex] || 0)
-          : countRows && label
-            ? !objectForCheckingUniqueCount?.[label]?.includes(`${countUniqueValue}`.toUpperCase().trim())
-              ? 1 : 0
+          const label = labelIndex || labelIndex === 0
+            ? labelFormatter
+              ? formatLabel({
+                label: row?.[labelIndex]?.toString()?.trim()?.replace(labelCharacterRemove || '', '') || nullLabel || '',
+                labelFormatter
+              })
+              : `${row?.[labelIndex]?.toString()?.trim().replace(labelCharacterRemove || '', '') || nullLabel || ''}`
             : null;
-
-        if (valueCalculator && !isNaN(parseInt(value))) {
-          if (valueCalculator === 'inversePercentage')
-            value = 1 - value
-        }
-
-
-
-        if (valueConverter === '0,00 => 0.00' && valueIndex && row?.[valueIndex]) {
-          value = Number(row?.[valueIndex]?.split(',').join('.')) || null
-        }
-
-        if (
-          replaceZeroWith && 
-          (!value || row?.[valueIndex] === 0 || row?.[valueIndex] === '0' || !row?.[valueIndex] || row?.[valueIndex] === '0.00' || row?.[valueIndex] === '0,00' || row?.[valueIndex] === '0.0000' || row?.[valueIndex] === 'NA' || row?.[valueIndex] === 'NA\r' )
-        ) {
-          value = replaceZeroWith
-        }
-
-        if (valueFormatter && !isNaN(parseInt(value))) {
-          if (valueFormatter === '%') {
-            value = `${numeral(Number(value)).format('0.0')}%`
-          } else {
-            value = numeral(Number(value)).format(valueFormatter)
-          }
-        }
-
-
-
-        if (quarter) {
-          value = { [quarter]: value }
-        }
-
-        const convertGroup = string => {
-          if (groupConverter === 'Trimestre => YYYY-QQ') {
-            const [quarter, year] = string.split('Trimestre');
-            return `${year.trim()}-Q${quarter.trim()}`;
-          }
           
-          return string
-        };
+          
+          let value = extractValueFromRange
+            ? row[valueIndex]
+            : valueIndex
+              ? Number(row[valueIndex] || 0)
+              : countRows && (label || countUniqueField) && row?.[0] !== ''
+                ? !objectForCheckingUniqueCount?.[label || countUniqueField ]?.includes(`${countUniqueValue}`.toUpperCase().trim())
+                  ? 1 : 0
+                : null;
 
-        const group = groupValueSplitter
-          ? row[groupIndex].split(groupValueSplitter)
-          : row[groupIndex] !== ''
-            ? convertGroup(row[groupIndex])
-            : nullGroup || '';
-
-
-        if (label && label !== '' && (labelIndex || labelIndex === 0) && (valueIndex || countRows)) {
-
-          if (!result[indicator]) {
-            result[indicator] = {}
-          }
-          if (!result[indicator][label]) {
-            if ((groupIndex || groupIndex === 0) && group !== '' && !excludeGroups?.includes(group)) {
-              result[indicator][label] = {};
-              result[indicator][label][group] = value
-            } else if (!(groupIndex || groupIndex === 0)) {
-              result[indicator][label] = value
-            }
-          } else {
-            if ((groupIndex || groupIndex === 0) && group !== '' && !excludeGroups?.includes(group)) {
-              if (!result[indicator][label][group]) {
-                result[indicator][label][group] = value
-              } else {
-                result[indicator][label][group] += value
+          if (extractValueFromRange && value) {
+            const valueArray = `${value}`.split(
+              extractValueFromRange?.delimiter || '-'
+            ).map(v => v.trim());
+            if (valueArray.length === 2 && !isNaN(parseInt(valueArray[0])) && !isNaN(parseInt(valueArray[1]))) {
+              if (extractValueFromRange?.targetValue === 'max') {
+                value = Math.max(...valueArray);
+              } else if (extractValueFromRange?.targetValue === 'min') {
+                value = Math.min(...valueArray);
               }
-            } else if (!groupIndex) {
-              result[indicator][label] += value
+            } else if (valueArray.length === 1 && !isNaN(parseInt(valueArray[0]))) {
+              value = Number(valueArray[0]);
             }
+
           }
 
-          if (!objectForCheckingUniqueCount[label]) {
-            objectForCheckingUniqueCount[label] = []
+          if (valueCalculator && !isNaN(parseInt(value))) {
+            if (valueCalculator === 'inversePercentage')
+              value = 1 - value
           }
-          if (objectForCheckingUniqueCount[label]) {
-            objectForCheckingUniqueCount[label].push(`${countUniqueValue}`.toUpperCase().trim())
+
+
+
+          if (valueConverter === '0,00 => 0.00' && valueIndex && row?.[valueIndex]) {
+            value = Number(row?.[valueIndex]?.split(',').join('.')) || null
           }
-        } else if (groupIndex || groupIndex === 0) {
-          if (!result[indicator]) {
-            result[indicator] = {}
+
+          if (
+            replaceZeroWith &&
+            (!value || row?.[valueIndex] === 0 || row?.[valueIndex] === '0' || !row?.[valueIndex] || row?.[valueIndex] === '0.00' || row?.[valueIndex] === '0,00' || row?.[valueIndex] === '0.0000' || row?.[valueIndex] === 'NA' || row?.[valueIndex] === 'NA\r')
+          ) {
+            value = replaceZeroWith
           }
-          if (groupValueSplitter && group?.[0] !== '') {
-            group.forEach(g => {
-              if (!result[indicator][g]) {
-                result[indicator][g] = value || 1
-              } else {
-                result[indicator][g] += value || 1
-              }
-            })
-          }
-          if (!groupValueSplitter && group !== '' && !excludeGroups?.includes(group)) {
-            if (!result[indicator][group]) {
-              result[indicator][group] = value || 1
+
+          if (valueFormatter && !isNaN(parseInt(value))) {
+            if (valueFormatter === '%') {
+              value = `${numeral(Number(value)).format('0.0')}%`
             } else {
-              result[indicator][group] += value || 1
+              value = numeral(Number(value)).format(valueFormatter)
             }
           }
-        } else if (!labelIndex) {
-          if (result?.[indicator]?.[quarter]) {
-            // if (result[indicator][quarter]) {
-            result[indicator][quarter] += value[quarter]
-            // }
-          } else {
+
+          if (quarter && value) {
+            value = { [quarter]: value }
+          }
+
+          const convertGroup = string => {
+            if (groupConverter === 'Trimestre => YYYY-QQ') {
+              const [quarter, year] = string.split('Trimestre');
+              return `${year.trim()}-Q${quarter.trim()}`;
+            }
+
+            if (groupConverter === 'mmm/YYYY to YYYY-QQ') {
+              const [month, year] = string.split('/');
+              const monthMap = {
+                'jan': 'Q1',
+                'feb': 'Q1',
+                'mar': 'Q1',
+                'apr': 'Q2',
+                'may': 'Q2',
+                'jun': 'Q2',
+                'jul': 'Q3',
+                'aug': 'Q3',
+                'sep': 'Q3',
+                'oct': 'Q4',
+                'nov': 'Q4',
+                'dec': 'Q4'
+              };
+              if (month && year) {
+                return `${year.trim()}-${monthMap[month.trim().toLowerCase()]}`;
+              }
+              return string;
+            }
+
+            return string
+          };
+
+          const group = groupValueSplitter
+            ? row[groupIndex]?.split(groupValueSplitter)?.map(g => g.trim())
+            : `${row[groupIndex] !== ''
+              ? convertGroup(row[groupIndex])
+              : nullGroup || ''}`.replace(groupCharacterRemove || '', '').trim();
+
+
+          if (label && (label !== '') && (labelIndex || labelIndex === 0) && (valueIndex || countRows)) {
+
             if (!result[indicator]) {
-              result[indicator] = value || 0
+              result[indicator] = {}
+            }
+            if (!result[indicator][label]) {
+              if ((groupIndex || groupIndex === 0) && group !== '' && !excludeGroups?.includes(group)) {
+                result[indicator][label] = {};
+                result[indicator][label][group] = value
+              } else if (!(groupIndex || groupIndex === 0)) {
+                result[indicator][label] = value
+              }
             } else {
-              result[indicator] += value || 0
+              if ((groupIndex || groupIndex === 0) && group !== '' && !excludeGroups?.includes(group)) {
+                if (!result[indicator][label][group]) {
+                  result[indicator][label][group] = value
+                } else {
+                  result[indicator][label][group] += value
+                }
+              } else if (!groupIndex) {
+                result[indicator][label] += value
+              }
+            }
+
+            if (!objectForCheckingUniqueCount[label]) {
+              objectForCheckingUniqueCount[label] = []
+            }
+            if (objectForCheckingUniqueCount[label]) {
+              objectForCheckingUniqueCount[label].push(`${countUniqueValue}`.toUpperCase().trim())
+            }
+          } else if (groupIndex || groupIndex === 0) {
+            if (!result[indicator]) {
+              result[indicator] = {}
+            }
+            if (groupValueSplitter && group?.[0] !== '') {
+              group?.forEach(g => {
+                const groupValue = convertGroup(g.trim());
+                if (!result[indicator][groupValue]) {
+                  result[indicator][groupValue] = value || 1
+                } else {
+                  result[indicator][groupValue] += value || 1
+                }
+              })
+            }
+            if (!groupValueSplitter && group !== '' && !excludeGroups?.includes(group)) {
+              const groupValue = group.trim();
+              if (!result[indicator][groupValue]) {
+                result[indicator][groupValue] = value || 1
+              } else {
+                result[indicator][groupValue] += value || 1
+              }
+            }
+          } else if (!labelIndex) {
+            if (result?.[indicator]?.[quarter]) {
+              // if (result[indicator][quarter]) {
+              result[indicator][quarter] += value[quarter]
+              // }
+            } else {
+              if (!result[indicator]) {
+                result[indicator] = value || 0
+              } else {
+                result[indicator] += value || 0
+              }
             }
           }
-        }
         } else if (wholeTable) {
           const tableArray = [];
           slicedRows.forEach(row => {
@@ -550,7 +683,7 @@ const processData = ({ mappings, worksheet }) => {
           headerRow.forEach((h, i) => {
             let header = h;
             if (mergeHeaderRows) {
-              const header2 = worksheet[sliceIndex ? (sliceIndex + mergeHeaderRows)  : mergeHeaderRows][i]
+              const header2 = worksheet[sliceIndex ? (sliceIndex + mergeHeaderRows) : mergeHeaderRows][i]
               if (header2 && header2 !== '') {
                 header = `${header}${header2}`.trim();
               }
@@ -558,15 +691,17 @@ const processData = ({ mappings, worksheet }) => {
             header = header.trim();
             // console.log({header, i});
             if (i !== labelIndex && header) {
+
               let value = Number(row[i] || 0);
 
               if (valueConverter === '0,00 => 0.00' && row?.[i]) {
-                value = Number(row?.[i]?.split(',').join('.')) || null
+                console.log('Converting value', row[i]);
+                value = Number(row?.[i]?.split(',').join('.').replace(/ /g, '')) || null
               }
 
               if (
-                replaceZeroWith && 
-                (!value || row?.[i] === 0 || row?.[i] === '0' || !row?.[i] || row?.[i] === '0.00' || row?.[i] === '0,00' || row?.[i] === '0.0000' || row?.[i] === 'NA' || row?.[i] === 'NA\r' )
+                replaceZeroWith &&
+                (!value || row?.[i] === 0 || row?.[i] === '0' || !row?.[i] || row?.[i] === '0.00' || row?.[i] === '0,00' || row?.[i] === '0.0000' || row?.[i] === 'NA' || row?.[i] === 'NA\r')
               ) {
                 value = replaceZeroWith
               }
@@ -578,7 +713,7 @@ const processData = ({ mappings, worksheet }) => {
                   value = numeral(Number(value)).format(valueFormatter)
                 }
               }
-              
+
               if (excludeColumnMatch && header.search(excludeColumnMatch) !== -1) {
                 return;
               } else if (columnKeyFormatter === 'YYYYQQ >> YYYY-QQ') {
@@ -596,7 +731,8 @@ const processData = ({ mappings, worksheet }) => {
             }
           })
         }
-    })
+      })
+    // console.log({slicedRows})
   });
   return result;
 };

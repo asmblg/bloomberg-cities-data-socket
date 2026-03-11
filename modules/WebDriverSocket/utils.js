@@ -5,7 +5,7 @@ const https = require('https');
 const fs = require('fs');
 const fsPromises = require('fs/promises')
 // const util = require('util');
-const PdfExtractor = require('pdf-extractor').PdfExtractor;
+// const PdfExtractor = require('pdf-extractor').PdfExtractor;
 const Tesseract = require('tesseract.js');
 
 
@@ -362,48 +362,48 @@ const parseTextFromImage = async ({ imagePath, rows, values, rowOffset }) => {
   return results;
 };
 
-const parsePDFviaLink = async ({ link, project, tablePage, pageRange }) =>
-  new Promise((resolve, reject) => {
-    console.log(link);
-    const file = fs.createWriteStream(`./data/${project}-report.pdf`);
-    https.get(link, response => {
-      response.pipe(file);
+// const parsePDFviaLink = async ({ link, project, tablePage, pageRange }) =>
+//   new Promise((resolve, reject) => {
+//     console.log(link);
+//     const file = fs.createWriteStream(`./data/${project}-report.pdf`);
+//     https.get(link, response => {
+//       response.pipe(file);
 
-      // after download completed close filestream
-      file.on("finish", () => {
-        file.close();
-        const pdfExtractor = new PdfExtractor(`./data/pdfparse/${project}`, {
-          viewportScale: (width, height) => {
-            //dynamic zoom based on rendering a page to a fixed page size 
-            if (width > height) {
-              //landscape: 1100px wide
-              return 1200 / width;
-            }
-            //portrait: 800px wide
-            return 1200 / width;
-          },
-          // pageRange: pageRange 
-          //   ? pageRange
-          //   : [tablePage, tablePage],
-        });
+//       // after download completed close filestream
+//       file.on("finish", () => {
+//         file.close();
+//         const pdfExtractor = new PdfExtractor(`./data/pdfparse/${project}`, {
+//           viewportScale: (width, height) => {
+//             //dynamic zoom based on rendering a page to a fixed page size 
+//             if (width > height) {
+//               //landscape: 1100px wide
+//               return 1200 / width;
+//             }
+//             //portrait: 800px wide
+//             return 1200 / width;
+//           },
+//           // pageRange: pageRange 
+//           //   ? pageRange
+//           //   : [tablePage, tablePage],
+//         });
 
-        pdfExtractor
-          .parse(`./data/${project}-report.pdf`)
-          .then(async () => {
-            resolve()
-          }).catch(function (err) {
-            reject(err);
-          });
-      })
-        .on('error', err =>
-          reject(err)
-        );
-    })
-  });
+//         pdfExtractor
+//           .parse(`./data/${project}-report.pdf`)
+//           .then(async () => {
+//             resolve()
+//           }).catch(function (err) {
+//             reject(err);
+//           });
+//       })
+//         .on('error', err =>
+//           reject(err)
+//         );
+//     })
+//   });
 
 module.exports = {
   Navigate,
-  parsePDFviaLink,
+  // parsePDFviaLink,
   parseTextFromImage,
   navigateDataAxelLogin,
   navigateDataAxelQuery,

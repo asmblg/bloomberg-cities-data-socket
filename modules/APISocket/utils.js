@@ -159,7 +159,10 @@ const getINEData = async ({url, query}) => {
 const getDataCubeData = async ({url, dimensions, lang}) => {
   const { data } = await axios({
     method: 'get',
-    url: `${url}${dimensions.join('/')}?lang=${lang || 'en'}&type=json`,
+    url: dimensions 
+    ? `${url}${dimensions.join('/')}?lang=${lang || 'en'}&type=json`
+    : url
+  
   });
 
   return data;

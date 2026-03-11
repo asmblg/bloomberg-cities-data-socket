@@ -22,11 +22,27 @@ const {
 
 const { mergeObjects } = require('./globalUtils/mergeObjects')
 
-const createNestedObject = (keys, value) => {
+const createNestedObject = (keys, value, nestedKey) => {
   if (keys.length === 1) {
+    if (typeof value === 'object' && nestedKey) {
+      const obj = {};
+      Object.entries(value).forEach(([key, val]) => {
+        if (typeof val === 'object' && !Array.isArray(val)) {
+          Object.entries(val).forEach(([k, v]) => {
+            if (!obj[key]) {
+              obj[key] = {};
+            }
+            obj[key][k] = { [nestedKey]: v };
+          })
+        } else {
+          obj[key] = { [nestedKey]: val };
+        }
+      });
+      return { [keys[0]]: obj };
+    }
     return { [keys[0]]: value };
   }
-  return { [keys[0]]: createNestedObject(keys.slice(1), value) };
+  return { [keys[0]]: createNestedObject(keys.slice(1), value, nestedKey) };
 }
 // const dataSocketConfigs = require('./configs/scheduled/JLL-XLSX.json')
 // .filter((item, i) =>
@@ -204,7 +220,6 @@ const run = async () => {
 
             break;
           }
-
           // FOR JLL, ALIGNABLE, DEALROOM, and LIGHTCAST -- ALIGNABLE PDF IN DEVELOPMENT
           case 'OneDrive': {
             config.clientID = process.env.MS_CLIENT_ID;
@@ -264,6 +279,9 @@ const run = async () => {
                     year,
                     targetKey,
                     totalKey,
+                    totalMaxCount,
+                    // valueFilter,
+
                     overwriteAt
                   },
                   origin: {
@@ -446,21 +464,57 @@ const run = async () => {
                     source[category] = { [indicator]: data[indicator] }
                   };
 
+                  // console.log('Data:',   util.inspect(data, false, 5, true));
                   if (targetKey) {
                     const targetKeyArray = targetKey.split('.');
                     if (totalKey && !allColumns) {
                       const totalObject = {};
-                      Object.values(data['undefined']).forEach((value) => {
-                        Object.entries(value).forEach(([key, val]) => {
-                          totalObject[key] = totalObject[key] ? totalObject[key] + val : val; 
-                        })
-                      });
-                      data['undefined'][totalKey] = totalObject;
+                      Object.values(data['undefined'])
+                        // .sort((a, b) => {
+                        //   if (a?.[indicator] && !b?.[indicator]) {
+                        //     return -1;
+                        //   }
+                        //   if (!a?.[indicator] && b?.[indicator]) {
+                        //     return 1;
+                        //   }
+                        //   return 0;
+                        // })
+                        .forEach((value) => {
+                          Object.entries(value).forEach(([key, val]) => {
+                            totalObject[key] = totalObject[key] ? totalObject[key] + val : val;
+                          })
+                        });
+                      if (totalMaxCount && totalKey) {
+                        const abridgedTotalObject = {};
+                        Object.entries(totalObject)
+                          .sort(([, a], [, b]) => b - a)
+                          .slice(0, totalMaxCount)
+                          .forEach(([key, value]) => {
+                            abridgedTotalObject[key] = value;
+                            // if (!data['undefined'][totalKey]) { 
+                            //   data['undefined'][totalKey] = {};
+                            // }
+                            // data['undefined'][totalKey][key] = value;
+                          })
+                         data['undefined'][totalKey] = abridgedTotalObject;
+                      } else {
+                        data['undefined'][totalKey] = totalObject;
+                      }
+                      // console.log('TOTAL OBJECT', util.inspect(totalObject, false, 4, true));
+
                     }
-                    source = createNestedObject(targetKeyArray, !allColumns ? data['undefined'] : rowKey ? data[rowKey] : data);
+                    source = createNestedObject(
+                      targetKeyArray,
+                      !allColumns
+                        ? data['undefined']
+                        : rowKey
+                          ? data[rowKey]
+                          : data,
+                      year
+                    );
                   }
 
-                  console.log('SOURCE', util.inspect(source, false, 4, true));
+                  console.log('SOURCE', util.inspect(source, false, 5, true));
 
                   updatedData = mergeObjects(
                     updatedData
@@ -484,13 +538,15 @@ const run = async () => {
             )
             break;
           }
+
+          // LISBOA
           // Vodafone Raw Data and Aggregation
           case 'Vodafone-Raw': {
             const vodafoneCollection = db.collection('vodafone');
             const fs = require('fs');
             const path = require('path');
 
-            const filename = 'voda_2025_7_8_9.csv' // `vodafone_data_${new Date().toISOString().replace(/:/g, '_').replace(/\./g, '_')}.csv`;
+            const filename = 'voda_2025_10_11_12.csv' // `vodafone_data_${new Date().toISOString().replace(/:/g, '_').replace(/\./g, '_')}.csv`;
             const filePath = path.resolve(__dirname, 'data', 'vodafone', filename);
 
             const createAggregatedData = async () => {
@@ -876,86 +932,6 @@ const run = async () => {
             )
             break;
           }
-          // FOR SLOVAK STATISTICAL OFFICE DATA CUBE
-          case 'DataCube': {
-            const data = await APISocket(config);
-            console.log('DataCube DATA', config.description, util.inspect(data, false, null, true));
-            const formattedData = {};
-            const { mapping } = config;
-            const targetKeyArray = mapping?.targetKey?.split('.') || [];
-            // console.log(config.description, ':', mapping);
-
-            const yearIndices = { ...data?.dimension?.[mapping?.origin?.yearKey]?.category?.index || {} };
-            const quarterIndices = { ...data?.dimension?.[mapping?.origin?.quarterKey]?.category?.index || {} };
-            const categoryIndices = { ...data?.dimension?.[mapping?.origin?.categoryKey]?.category?.index || {} };
-            const quarterIndexCount = Object.keys(quarterIndices).length;
-            const categoryIndexCount = Object.keys(categoryIndices).length;
-
-            // console.log('YEAR INDICES', util.inspect(yearIndices, false, null, true));
-            // console.log('QUARTER INDICES', util.inspect(quarterIndices, false, null, true));
-
-            Object.entries(yearIndices).forEach(([year, yearIndex]) => {
-              if (quarterIndexCount > 0) {
-                Object.entries(quarterIndices).forEach(([quarter, quarterIndex]) => {
-                  if (mapping?.origin?.excludeKey && quarter !== mapping.origin.excludeKey || !mapping?.origin?.excludeKey) {
-                    const dataIndex = yearIndex * quarterIndexCount + quarterIndex;
-                    const value = data?.value?.[dataIndex] || null;
-                    const quarterKey = `${year}-Q${quarter.replace('Q', '')}`;
-                    if (value || value === 0) {
-                      formattedData[quarterKey] = value;
-                    }
-                  }
-                });
-              } else if (mapping?.origin?.categoryKey) {
-                Object.entries(categoryIndices).forEach(([category, categoryIndex]) => {
-                  if (mapping?.origin?.excludeKey && category !== mapping.origin.excludeKey || !mapping?.origin?.excludeKey) {
-                    const dataIndex = yearIndex * categoryIndexCount + categoryIndex;
-                    const value = data?.value?.[dataIndex] || null;
-                    const label = data?.dimension?.[mapping?.origin?.categoryKey]?.category?.label?.[category] || category;
-                    // const quarterKey = `${year}-Q${category.replace('Q', '')}`;
-                    if (value || value === 0) {
-                      if (!formattedData[label]) {
-                        formattedData[label] = {};
-                      }
-                      formattedData[label][year] = value;
-                    }
-                  }
-                });
-              } else {
-                const dataIndex = yearIndex;
-                const value = data?.value?.[dataIndex] || null;
-                const label = mapping?.origin?.categoryKey ? data?.dimension?.[mapping?.origin?.categoryKey]?.category?.label?.[yearIndex] : year;
-                if (value || value === 0) {
-                  formattedData[label] = value;
-                }
-              }
-            });
-
-            const mappedData = targetKeyArray[0]
-              ? createNestedObject(targetKeyArray, formattedData)
-              : {
-                [mapping.section]: {
-                  [mapping.geo]: {
-                    [mapping.indicator]: formattedData
-                  }
-                }
-              }
-
-            console.log('MAPPED DATA', util.inspect(mappedData, false, null, true));
-
-            updatedData = mergeObjects(
-              structuredClone(dataFromDB.data),
-              mappedData
-            )
-
-            break;
-          }
-
-          case 'Eurostat API': {
-            const data = await APISocket(config);
-            console.log('Eurostat DATA', config, util.inspect(data, false, null, true));
-            break;
-          }
           case 'ESRI API': {
             const data = await APISocket(config);
             // console.log('Turismo de Portugal DATA', config.description, util.inspect(data, false, null, true));
@@ -1118,6 +1094,149 @@ const run = async () => {
 
             break;
           }
+
+          // BRATISLAVA
+          // FOR SLOVAK STATISTICAL OFFICE DATA CUBE
+          case 'DataCube': {
+            const data = await APISocket(config);
+            console.log('DataCube DATA', config.description, util.inspect(data, false, null, true));
+            const formattedData = {};
+            const { mapping } = config;
+            const targetKeyArray = mapping?.targetKey?.split('.') || [];
+            // console.log(config.description, ':', mapping);
+
+            const yearIndices = { ...data?.dimension?.[mapping?.origin?.yearKey]?.category?.index || {} };
+            const yearIndexCount = Object.keys(yearIndices).length;
+            const quarterIndices = { ...data?.dimension?.[mapping?.origin?.quarterKey]?.category?.index || {} };
+            const quarterIndexCount = Object.keys(quarterIndices).length;
+            const categoryIndices = { ...data?.dimension?.[mapping?.origin?.categoryKey]?.category?.index || {} };
+            const categoryIndexCount = Object.keys(categoryIndices).length;
+            const geoIndices = { ...data?.dimension?.[mapping?.origin?.geoKey]?.category?.index || {} };
+            // const geoIndexCount = Object.keys(geoIndices).length;
+
+
+            // console.log('YEAR INDICES', util.inspect(yearIndices, false, null, true));
+            // console.log('QUARTER INDICES', util.inspect(quarterIndices, false, null, true));
+
+            Object.entries(yearIndices).forEach(([year, yearIndex]) => {
+              if (quarterIndexCount > 0) {
+                Object.entries(quarterIndices).forEach(([quarter, quarterIndex]) => {
+                  if (mapping?.origin?.excludeKey && quarter !== mapping.origin.excludeKey || !mapping?.origin?.excludeKey) {
+                    const dataIndex = yearIndex * quarterIndexCount + quarterIndex;
+                    const value = data?.value?.[dataIndex] || null;
+                    const quarterKey = `${year}-Q${quarter.replace('Q', '')}`.replace(/\./g, '');
+                    if (value || value === 0) {
+                      formattedData[quarterKey] = value;
+                    }
+                  }
+                });
+              } else if (mapping?.origin?.categoryKey) {
+                Object.entries(categoryIndices).forEach(([category, categoryIndex]) => {
+                  if (mapping?.origin?.excludeKey && category !== mapping.origin.excludeKey || !mapping?.origin?.excludeKey) {
+                    const dataIndex = yearIndex * categoryIndexCount + categoryIndex;
+                    const value = data?.value?.[dataIndex] || null;
+                    let label = data?.dimension?.[mapping?.origin?.categoryKey]?.category?.label?.[category] || category;
+                    if (mapping?.origin?.categoryFormatter) {
+                      const formatterType = mapping.origin.categoryFormatter?.type;
+                      const formatterArguments = mapping.origin.categoryFormatter?.arguments || [];
+                      switch (formatterType) {
+                        case 'replace': {
+                          label = label.replace(formatterArguments[0], formatterArguments[1] || '');
+                        }
+                      }
+                    }
+
+                    if (mapping?.origin?.categoryFormatters) {
+                      mapping.origin.categoryFormatters.forEach((formatter) => {
+                        const formatterType = formatter?.type;
+                        const formatterArguments = formatter?.arguments || [];
+                        switch (formatterType) {
+                          case 'replace': {
+                            label = label.replace(formatterArguments[0], formatterArguments[1] || '');
+                            break;
+                          }
+                          case 'toUpperCase': {
+                            label = label.toUpperCase();
+                            break;
+                          }
+                        }
+                      });
+                    }
+
+                    if (mapping?.origin?.categoryManifest) {
+                      label = mapping.origin.categoryManifest[label] || label;
+                    }
+
+
+                    // const quarterKey = `${year}-Q${category.replace('Q', '')}`;
+                    if (value || value === 0) {
+                      if (!formattedData[label]) {
+                        formattedData[label] = {};
+                      }
+                      formattedData[label][year] = (formattedData?.[label]?.[year] || 0) + value;
+                    }
+                  }
+                });
+              } else if (mapping?.origin?.geoKey) {
+                Object.entries(geoIndices).forEach(([geo, geoIndex]) => {
+                  if (mapping?.origin?.excludeKey && geo !== mapping.origin.excludeKey || !mapping?.origin?.excludeKey) {
+                    const dataIndex = geoIndex * yearIndexCount + yearIndex;
+                    const value = data?.value?.[dataIndex] || null;
+                    let label = data?.dimension?.[mapping?.origin?.geoKey]?.category?.label?.[geo] || geo;
+                    if (mapping?.origin?.geoFormatter) {
+                      const formatterType = mapping.origin.geoFormatter?.type;
+                      const formatterArguments = mapping.origin.geoFormatter?.arguments || [];
+                      switch (formatterType) {
+                        case 'replace': {
+                          label = label.replace(formatterArguments[0], formatterArguments[1] || '');
+                          break;
+                        }
+                      }
+                    }
+                    // const quarterKey = `${year}-Q${category.replace('Q', '')}`;
+                    if (value || value === 0) {
+                      if (!formattedData[label]) {
+                        formattedData[label] = {};
+                      }
+                      formattedData[label][year] = value;
+                    }
+                  }
+                });
+              } else {
+                const dataIndex = yearIndex;
+                const value = data?.value?.[dataIndex] || null;
+                const label = mapping?.origin?.categoryKey ? data?.dimension?.[mapping?.origin?.categoryKey]?.category?.label?.[yearIndex] : year;
+                if (value || value === 0) {
+                  formattedData[label] = value;
+                }
+              }
+            });
+
+            const mappedData = targetKeyArray[0]
+              ? createNestedObject(targetKeyArray, formattedData)
+              : {
+                [mapping.section]: {
+                  [mapping.geo]: {
+                    [mapping.indicator]: formattedData
+                  }
+                }
+              }
+
+            console.log('MAPPED DATA', util.inspect(mappedData, false, null, true));
+
+            updatedData = mergeObjects(
+              structuredClone(dataFromDB.data),
+              mappedData
+            )
+
+            break;
+          }
+          case 'Eurostat API': {
+            const data = await APISocket(config);
+            console.log('Eurostat DATA', config, util.inspect(data, false, null, true));
+            break;
+          }
+
           default: {
             console.log(config.type, 'Data Socket Unsupported:', config.description);
             break;
@@ -1159,14 +1278,6 @@ const run = async () => {
           }
         } else {
           console.log(config._id || "*", 'NO UPDATE')
-          // console.log( || "*", config?.mapToGeo ? 'MAPPPED TO GEO' : 'NO DATA')
-          // // HANDLE NO DATA
-          // if (config?.mapToGeo) {
-          //   await socketCollection.findOneAndUpdate(
-          //     { _id: config._id },
-          //     { $set: { processedDate: new Date() } }
-          //   )
-          // }
         }
 
       } catch (err) {

@@ -1,7 +1,7 @@
 const util = require('util');
 const { 
   Navigate,
-  parsePDFviaLink,
+  // parsePDFviaLink,
   parseTextFromImage,
   parseFromText,
   navigateDataAxelLogin,
@@ -61,13 +61,13 @@ const WebDriverSocket = async (config) => {
         pageRange
       } = config;
 
-      await parsePDFviaLink({
-        link: `https://www.us.jll.com/content/dam/jll-com/documents/pdf/research/americas/us/${quarter}-${year}-${subtype}-insights/jll-us-${subtype}-insight-${quarter}-${year}-${city}.pdf`.toLowerCase(), 
-        project, 
-        tablePage,
-        pageRange
+      // await parsePDFviaLink({
+      //   link: `https://www.us.jll.com/content/dam/jll-com/documents/pdf/research/americas/us/${quarter}-${year}-${subtype}-insights/jll-us-${subtype}-insight-${quarter}-${year}-${city}.pdf`.toLowerCase(), 
+      //   project, 
+      //   tablePage,
+      //   pageRange
 
-      }).catch(err => {throw err});
+      // }).catch(err => {throw err});
 
       if (useText) {
         const result = await parseFromText({

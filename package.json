@@ -36,7 +36,6 @@
     "mongojs": "^3.1.0",
     "numeral": "^2.0.6",
     "openai": "^5.20.0",
-    "pdf-extractor": "^2.0.0",
     "puppeteer": "^19.4.1",
     "puppeteer-extra": "^3.3.4",
     "qs": "^6.11.0",

@@ -11,11 +11,11 @@ const {
 } = require('./utils')
 
 
-const { 
-  parsePDFviaLink,
-  parseFromText,
-  parseTextFromImage 
-} = require('../WebDriverSocket/utils')
+// const { 
+//   parsePDFviaLink,
+//   parseFromText,
+//   parseTextFromImage 
+// } = require('../WebDriverSocket/utils')
 
 const OneDriveSocket = async ({
   // project,
@@ -74,35 +74,35 @@ const OneDriveSocket = async ({
 
     for await (const file of files){
 
-      if (fileType === 'PDF') {
-        await parsePDFviaLink({
-          link: file['@microsoft.graph.downloadUrl'], 
-          project, 
-          // tablePage,
-          // pageRange
+      // if (fileType === 'PDF') {
+      //   await parsePDFviaLink({
+      //     link: file['@microsoft.graph.downloadUrl'], 
+      //     project, 
+      //     // tablePage,
+      //     // pageRange
     
-        }).catch(err => {throw err});
+      //   }).catch(err => {throw err});
   
-        if (useText) {
-          result = await parseFromText({
-            textPaths: pageRange
-              ? pageRange.map(pageNum =>
-                `./data/pdfparse/${project}/text-${pageNum}.txt`
-                )
-              : null
-          }).catch(err => {throw err});
+      //   if (useText) {
+      //     result = await parseFromText({
+      //       textPaths: pageRange
+      //         ? pageRange.map(pageNum =>
+      //           `./data/pdfparse/${project}/text-${pageNum}.txt`
+      //           )
+      //         : null
+      //     }).catch(err => {throw err});
   
-          return result;
+      //     return result;
   
-        } else {
-          result = await parseTextFromImage({
-            imagePath : `./data/pdfparse/${project}/page-${tablePage}.png`,
-            rows,
-            values,
-            rowOffset 
-          }).catch(err => {throw err});
-        }
-      }
+      //   } else {
+      //     result = await parseTextFromImage({
+      //       imagePath : `./data/pdfparse/${project}/page-${tablePage}.png`,
+      //       rows,
+      //       values,
+      //       rowOffset 
+      //     }).catch(err => {throw err});
+      //   }
+      // }
 
       if (fileType === 'XLSX') {
         const worksheet = await fetchFromOneDrive({

@@ -24,7 +24,6 @@ const APISocket = async (config) => {
       return await getDataCubeData(config);
     case 'Eurostat API':
       return await getEurostatData(config);
-      return null;
     default:
       return null;
   }
