@@ -474,8 +474,10 @@ const processData = ({ mappings, worksheet }) => {
         ? filter.value
           ? row[filterIndex]?.trim() === filter.value
           : filter.values
-            ? filter.values.includes(row[filterIndex]?.trim())
-            : true
+            ? filter.values.includes(`${row[filterIndex]}`.trim())
+            : filter.excludeValues
+              ? !filter.excludeValues.includes(`${row[filterIndex]}`.trim())
+              : true
         : true)
       .filter(row => filter2
         ? filter2.value

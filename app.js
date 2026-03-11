@@ -496,7 +496,7 @@ const run = async () => {
                             // }
                             // data['undefined'][totalKey][key] = value;
                           })
-                         data['undefined'][totalKey] = abridgedTotalObject;
+                        data['undefined'][totalKey] = abridgedTotalObject;
                       } else {
                         data['undefined'][totalKey] = totalObject;
                       }
@@ -1100,7 +1100,7 @@ const run = async () => {
           case 'DataCube': {
             const data = await APISocket(config);
             console.log('DataCube DATA', config.description, util.inspect(data, false, null, true));
-            const formattedData = {};
+            let formattedData = {};
             const { mapping } = config;
             const targetKeyArray = mapping?.targetKey?.split('.') || [];
             // console.log(config.description, ':', mapping);
@@ -1132,7 +1132,7 @@ const run = async () => {
                 });
               } else if (mapping?.origin?.categoryKey) {
                 Object.entries(categoryIndices).forEach(([category, categoryIndex]) => {
-                  if (mapping?.origin?.excludeKey && category !== mapping.origin.excludeKey || !mapping?.origin?.excludeKey) {
+                  if ((mapping?.origin?.excludeKey && category !== mapping.origin.excludeKey) || !mapping?.origin?.excludeKey) {
                     const dataIndex = yearIndex * categoryIndexCount + categoryIndex;
                     const value = data?.value?.[dataIndex] || null;
                     let label = data?.dimension?.[mapping?.origin?.categoryKey]?.category?.label?.[category] || category;
@@ -1167,7 +1167,6 @@ const run = async () => {
                       label = mapping.origin.categoryManifest[label] || label;
                     }
 
-
                     // const quarterKey = `${year}-Q${category.replace('Q', '')}`;
                     if (value || value === 0) {
                       if (!formattedData[label]) {
@@ -1177,6 +1176,7 @@ const run = async () => {
                     }
                   }
                 });
+
               } else if (mapping?.origin?.geoKey) {
                 Object.entries(geoIndices).forEach(([geo, geoIndex]) => {
                   if (mapping?.origin?.excludeKey && geo !== mapping.origin.excludeKey || !mapping?.origin?.excludeKey) {
@@ -1205,15 +1205,48 @@ const run = async () => {
               } else {
                 const dataIndex = yearIndex;
                 const value = data?.value?.[dataIndex] || null;
-                const label = mapping?.origin?.categoryKey ? data?.dimension?.[mapping?.origin?.categoryKey]?.category?.label?.[yearIndex] : year;
+                const label = mapping?.origin?.categoryKey
+                  ? data?.dimension?.[mapping?.origin?.categoryKey]?.category?.label?.[yearIndex]
+                  : year;
                 if (value || value === 0) {
                   formattedData[label] = value;
                 }
               }
             });
 
+            if (mapping?.origin?.totalValuesByCategory) {
+              // console.log('TOTAL VALUES BY CATEGORY');
+              // console.log(formattedData);
+              const totalObject = {};
+              Object.values(formattedData).forEach((dataSegment) => {
+                Object.entries(dataSegment).forEach(([key, value]) => {
+                  if (!totalObject[key]) {
+                    totalObject[key] = value;
+                  } else {
+                    totalObject[key] += value;
+                  }
+                });
+              });
+
+              // console.log('TOTAL OBJECT', totalObject);
+              formattedData = totalObject;
+            }
+
+            if (quarterIndexCount === 0 &&
+              mapping?.origin?.createQuarterlyKeys
+            ) {
+              const createdObject = {};
+              Object.entries(formattedData).forEach(([key, value]) => {
+                for (let i = 1; i <= 4; i++) {
+                  const quarterKey = `${key}-Q${i}`;
+                  createdObject[quarterKey] = value;
+                }
+              });
+              formattedData = createdObject;
+            }
+
             const mappedData = targetKeyArray[0]
-              ? createNestedObject(targetKeyArray, formattedData)
+              ? createNestedObject(targetKeyArray,  formattedData)
               : {
                 [mapping.section]: {
                   [mapping.geo]: {
@@ -1224,10 +1257,10 @@ const run = async () => {
 
             console.log('MAPPED DATA', util.inspect(mappedData, false, null, true));
 
-            updatedData = mergeObjects(
-              structuredClone(dataFromDB.data),
-              mappedData
-            )
+            // updatedData = mergeObjects(
+            //   structuredClone(dataFromDB.data),
+            //   mappedData
+            // )
 
             break;
           }
