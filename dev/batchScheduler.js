@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const configName = 'Dealroom-Company-List';
-const templates = require(`./configs/templates/${configName}.json`);
+const templates = require(`../configs/templates/${configName}.json`);
 const projects = ['lisboa']// ['Phoenix', 'Tampa', 'Baltimore']
 const dates = [
   '2024-04-15',

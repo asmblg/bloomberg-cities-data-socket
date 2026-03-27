@@ -2,6 +2,7 @@
 require('dotenv').config();
 
 const fs = require('fs');
+const path = require('path');
 const csv = require('csv-parser');
 const OpenAI = require('openai');
 
@@ -12,6 +13,8 @@ const client = new OpenAI({
 // ---- Config ----
 const BATCH_SIZE = Number(process.env.BATCH_SIZE || 80);
 const CSV_SEPARATOR = process.env.CSV_SEPARATOR || ','; // set to ";" if needed
+const TARGET_LANG = process.env.TARGET_LANG || 'European Portuguese (pt-PT)';
+const TARGET_LANG_CODE = process.env.TARGET_LANG_CODE || 'pt';
 
 // ---- Helpers ----
 const normalizeHeader = (h) =>
@@ -38,7 +41,7 @@ function chunk(arr, size) {
 // Translate a batch of names
 async function translateBatch(names) {
   const prompt = `
-Translate the following occupation titles into European Portuguese (pt-PT).
+Translate the following occupation titles into ${TARGET_LANG}.
 Return ONLY a JSON object where each key is the exact English title and the value is the translation.
 No comments, no code fences, no extra text.
 
@@ -48,7 +51,7 @@ ${JSON.stringify(names, null, 2)}
   const response = await client.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
-      { role: 'system', content: 'You are a professional translator into European Portuguese (pt-PT) only.' },
+      { role: 'system', content: `You are a professional translator into ${TARGET_LANG} only.` },
       { role: 'user', content: prompt }
     ],
     temperature: 0,
@@ -144,9 +147,9 @@ async function processCSV(filePath) {
   }
 
   // Step 5: Write JSON files
-  fs.writeFileSync('names_en.json', JSON.stringify(enMap, null, 2));
-  fs.writeFileSync('names_pt.json', JSON.stringify(ptMap, null, 2));
-  console.log('✅ Done! Files: names_en.json & names_pt.json');
+  fs.writeFileSync(path.join(__dirname, 'names_en.json'), JSON.stringify(enMap, null, 2));
+  fs.writeFileSync(path.join(__dirname, `names_${TARGET_LANG_CODE}.json`), JSON.stringify(ptMap, null, 2));
+  console.log(`✅ Done! Files: names_en.json & names_${TARGET_LANG_CODE}.json`);
 }
 
 // Run with: node generate-jsons.js input.csv

@@ -1,10 +1,10 @@
-// const {parsePDFviaLink} = require('./modules/WebDriverSocket/utils');
+// const {parsePDFviaLink} = require('../modules/WebDriverSocket/utils');
 require('dotenv').config();
 const fs = require('fs');
-const {APISocket, XLSXSocket, WebDriverSocket, GoogleSheetSocket} = require('./modules');
-// const {Navigate, parsePDFviaLink, parseTextFromImage} = require('./modules/WebDriverSocket/utils');
-const { getDbConnection } = require('./globalUtils/API');
-const devConfigs = require('./modules/XLSXSocket/devConfigs.json')
+const {APISocket, XLSXSocket, WebDriverSocket, GoogleSheetSocket} = require('../modules');
+// const {Navigate, parsePDFviaLink, parseTextFromImage} = require('../modules/WebDriverSocket/utils');
+const { getDbConnection } = require('../globalUtils/API');
+const devConfigs = require('../modules/XLSXSocket/devConfigs.json')
 const Tesseract = require('tesseract.js');
 
 const runTest = async () => {

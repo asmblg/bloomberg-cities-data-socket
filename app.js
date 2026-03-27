@@ -503,6 +503,19 @@ const run = async () => {
                       // console.log('TOTAL OBJECT', util.inspect(totalObject, false, 4, true));
 
                     }
+
+                    if (totalKey && allColumns) {
+                      if (!data['undefined'][totalKey]) {
+                        data['undefined'][totalKey] = {};
+                      }
+                      Object.entries(data['undefined']).forEach(([key, value]) => {
+                        if (key !== totalKey) {
+                          Object.entries(value).forEach(([k, v]) => {
+                            data['undefined'][totalKey][k] = data['undefined'][totalKey][k] ? data['undefined'][totalKey][k] + v : v;
+                          })
+                        }
+                      })
+                    }
                     source = createNestedObject(
                       targetKeyArray,
                       !allColumns
@@ -1257,10 +1270,10 @@ const run = async () => {
 
             console.log('MAPPED DATA', util.inspect(mappedData, false, null, true));
 
-            // updatedData = mergeObjects(
-            //   structuredClone(dataFromDB.data),
-            //   mappedData
-            // )
+            updatedData = mergeObjects(
+              structuredClone(dataFromDB.data),
+              mappedData
+            )
 
             break;
           }

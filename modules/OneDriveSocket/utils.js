@@ -680,7 +680,9 @@ const processData = ({ mappings, worksheet }) => {
           // console.log('All columns processing');
           // console.log(row);
           const label = row[labelIndex]?.toString()?.trim();
-          result[label] = {};
+          result[label] = {
+            ...result[label]
+          };
           // console.log('Heasder Row', headerRow);
           headerRow.forEach((h, i) => {
             let header = h;
@@ -693,7 +695,6 @@ const processData = ({ mappings, worksheet }) => {
             header = header.trim();
             // console.log({header, i});
             if (i !== labelIndex && header) {
-
               let value = Number(row[i] || 0);
 
               if (valueConverter === '0,00 => 0.00' && row?.[i]) {
@@ -727,7 +728,7 @@ const processData = ({ mappings, worksheet }) => {
                 const year = header.slice(0, 4);
                 result[label][`${year}-Q${quarter}`] = value;
               } else {
-                result[label][header] = value;
+                result[label][header] = (result?.[label]?.[header] || 0) + value;
               }
 
             }
@@ -736,6 +737,8 @@ const processData = ({ mappings, worksheet }) => {
       })
     // console.log({slicedRows})
   });
+
+  
   return result;
 };
 
